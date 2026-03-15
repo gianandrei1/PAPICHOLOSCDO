@@ -8,7 +8,7 @@ import { Btn } from "./AdminPrimitives";
 import { LoginGate } from "./LoginGate";
 import { StatCards } from "./StatCards";
 import { OrderCard } from "./OrderCard";
-import { HistoryPanel } from "./HistoryPanel";
+import { HistoryPanel } from "./Historypanel";
 import { MenuItemCard } from "./MenuItemCard";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminTopBar, AdminBottomNav } from "./AdminNav";
