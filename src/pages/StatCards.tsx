@@ -1,3 +1,4 @@
+import { formatPrice } from "@/lib/utils";
 import {
   TrendingUp,
   ClipboardList,
@@ -9,6 +10,7 @@ import {
   BadgeDollarSign,
 } from "lucide-react";
 import { C } from "./constants";
+import { Order } from "../types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const isToday = (dateStr: string) => {
@@ -34,7 +36,7 @@ export const StatCards = ({
   orders,
   menuCount,
 }: {
-  orders: any[];
+  orders: Order[];
   menuCount: number;
 }) => {
   const completed = orders.filter((o) => o.status === "completed");
@@ -58,7 +60,7 @@ export const StatCards = ({
   ).length;
 
   const fmt = (n: number) =>
-    n >= 1000 ? `₱${(n / 1000).toFixed(1)}k` : `₱${n.toLocaleString()}`;
+    n >= 1000 ? `₱${(n / 1000).toFixed(1)}k` : `₱${formatPrice(n)}`;
 
   const now = new Date();
   const monthName = now.toLocaleString("default", { month: "long" });
@@ -83,7 +85,11 @@ export const StatCards = ({
           text="Revenue Board"
         />
         <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+            gap: 12,
+          }}
         >
           <RevenueCard
             label={`Today · ${todayLabel}`}
@@ -108,7 +114,11 @@ export const StatCards = ({
           text="Sales Tracker"
         />
         <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+            gap: 12,
+          }}
         >
           <SalesCard label="Daily Sales" value={todaySales} sub="today" />
           <SalesCard label="Monthly Sales" value={monthSales} sub={monthName} />
@@ -125,7 +135,7 @@ export const StatCards = ({
           className="adm-stats"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
             gap: 12,
           }}
         >

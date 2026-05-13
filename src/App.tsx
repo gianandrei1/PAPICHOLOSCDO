@@ -19,6 +19,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/pickup" element={<Index isPickup={true} />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/table-qrs" element={<TableQRs />} />
           <Route path="*" element={<NotFound />} />

@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Plus,
   Trash2,
@@ -9,7 +10,9 @@ import {
   Gauge,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import { C } from "./constants";
 import { Btn } from "./AdminPrimitives";
 
@@ -45,6 +48,7 @@ export const CarouselManager = ({
 }: CarouselManagerProps) => {
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<CarouselImage | null>(null);
   const [togglingEnabled, setTogglingEnabled] = useState(false);
   // selectedSpeed drives the black highlight — always in sync
   const [selectedSpeed, setSelectedSpeed] = useState<number>(speed);
@@ -121,7 +125,13 @@ export const CarouselManager = ({
 
   // ── Delete image ───────────────────────────────────────────────────────
   const deleteImage = async (img: CarouselImage) => {
-    if (!window.confirm("Remove this image from the carousel?")) return;
+    setConfirmDelete(img);
+  };
+
+  const executeDelete = async () => {
+    if (!confirmDelete) return;
+    const img = confirmDelete;
+    setConfirmDelete(null);
     setDeletingId(img.id);
     const { error } = await supabase
       .from("carousel_images")
@@ -403,6 +413,135 @@ export const CarouselManager = ({
           ))}
         </div>
       )}
+
+      {/* Custom Confirmation Modal — Portal to body for true viewport centering */}
+      <AnimatePresence>
+        {confirmDelete &&
+          createPortal(
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setConfirmDelete(null)}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 9998,
+                  background: "rgba(0,0,0,0.6)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                }}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                style={{
+                  position: "fixed",
+                  zIndex: 9999,
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: "calc(100% - 40px)",
+                  maxWidth: 340,
+                  background: "rgba(25, 24, 24, 0.98)",
+                  borderRadius: 24,
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  boxShadow: "0 40px 100px rgba(0,0,0,0.6)",
+                  padding: "36px 24px",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 18,
+                    background: "rgba(239, 68, 68, 0.15)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 20,
+                    color: "#ef4444",
+                  }}
+                >
+                  <AlertTriangle size={30} />
+                </div>
+
+                <h3
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 700,
+                    color: "#fff",
+                    marginBottom: 8,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  Remove Image?
+                </h3>
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: "rgba(255, 255, 255, 0.6)",
+                    lineHeight: 1.6,
+                    marginBottom: 32,
+                  }}
+                >
+                  Are you sure you want to remove this image from the carousel?
+                  This action cannot be undone.
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    width: "100%",
+                  }}
+                >
+                  <button
+                    onClick={executeDelete}
+                    style={{
+                      width: "100%",
+                      padding: "16px",
+                      borderRadius: 16,
+                      border: "none",
+                      background: "#ef4444",
+                      color: "#fff",
+                      fontSize: 15,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      boxShadow: "0 8px 20px rgba(239, 68, 68, 0.2)",
+                    }}
+                  >
+                    Yes, Remove Image
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(null)}
+                    style={{
+                      width: "100%",
+                      padding: "16px",
+                      borderRadius: 16,
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      background: "rgba(255, 255, 255, 0.05)",
+                      color: "rgba(255, 255, 255, 0.8)",
+                      fontSize: 14,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            </>,
+            document.body
+          )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -10,19 +10,20 @@ if (typeof document !== "undefined" && !document.getElementById("adm-inter")) {
 
 // ── Color tokens ──────────────────────────────────────────────────────────────
 export const C = {
-  bg:      "#F7F7F7",
-  surface: "#FFFFFF",
-  lift:    "#F2F2F2",
-  border:  "#E8E8E8",
-  line:    "#F0F0F0",
-  ink:     "#0A0A0A",
-  body:    "#1A1A1A",
-  mid:     "#5A5A5A",
-  faint:   "#AAAAAA",
-  white:   "#FFFFFF",
+  bg:      "#141313",
+  surface: "#1c1b1b", // lighter surface
+  lift:    "#2a2a2a", // elevated inputs
+  border:  "#444748",
+  line:    "#353434",
+  ink:     "#ffffff",
+  body:    "#e5e2e1",
+  mid:     "#c4c7c8",
+  faint:   "#8e9192",
+  white:   "#141313", // Inverted text color (dark text on white/ink backgrounds)
 };
 
 export const f = "'Inter', system-ui, -apple-system, sans-serif";
+export const fHead = "'Montserrat', system-ui, -apple-system, sans-serif";
 
 // ── Global CSS ─────────────────────────────────────────────────────────────────
 export const GLOBAL_CSS = `
@@ -36,19 +37,19 @@ export const GLOBAL_CSS = `
   .a-fade  { animation: fadeUp 0.22s ease both; }
   input, select, textarea {
     font-family: ${f}; font-size: 15px; font-weight: 400; color: ${C.body};
-    background: ${C.lift}; border: 1.5px solid ${C.border}; border-radius: 10px;
+    background: ${C.lift}; border: 1px solid ${C.border}; border-radius: 0px !important;
     padding: 12px 14px; width: 100%; outline: none;
     -webkit-appearance: none; appearance: none;
     transition: border-color 0.15s, box-shadow 0.15s; line-height: 1.5;
   }
   input:focus, select:focus, textarea:focus {
-    border-color: ${C.ink}; box-shadow: 0 0 0 3px rgba(10,10,10,0.07);
+    border-color: ${C.ink}; box-shadow: 0 0 0 1px ${C.ink};
   }
   input::placeholder, textarea::placeholder { color: ${C.faint}; }
   ::-webkit-scrollbar { width: 0; height: 0; }
-  button { font-family: ${f}; cursor: pointer; }
-
-  @media (min-width: 768px) {
+  button { font-family: ${fHead}; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0px !important; }
+  h1, h2, h3, h4, h5, h6 { font-family: ${fHead}; text-transform: uppercase; letter-spacing: -0.02em; }
+  * { border-radius: 0px !important; }  @media (min-width: 768px) {
     .adm-layout     { display: flex !important; flex-direction: row !important; }
     .adm-sidebar    { display: flex !important; }
     .adm-bottomnav  { display: none !important; }
@@ -66,10 +67,10 @@ export const GLOBAL_CSS = `
 
 // ── Status map ────────────────────────────────────────────────────────────────
 export const ST: Record<string, { label: string; fg: string; bg: string }> = {
-  pending:   { label: "Pending",   fg: "#5A5A5A", bg: "#EBEBEB" },
-  preparing: { label: "Preparing", fg: "#92400E", bg: "#FEF3C7" },
-  completed: { label: "Completed", fg: "#FFF",    bg: "#16A34A"    },
-  cancelled: { label: "Cancelled", fg: "#FFF",    bg: "#DC2626" },
+  pending:   { label: "Pending",   fg: "#c4c7c8", bg: "#2a2a2a" },
+  preparing: { label: "Preparing", fg: "#ffdad6", bg: "#93000a" },
+  completed: { label: "Completed", fg: "#141313", bg: "#e2e2e2" },
+  cancelled: { label: "Cancelled", fg: "#ffb4ab", bg: "#690005" },
 };
 export const getSt = (s: string) => ST[s] ?? ST.pending;
 

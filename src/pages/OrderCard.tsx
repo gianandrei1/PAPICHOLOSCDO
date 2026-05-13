@@ -1,3 +1,4 @@
+import { formatPrice } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import {
   Clock,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { C } from "./constants";
 import { Pill, Btn, Lbl, HR } from "./AdminPrimitives";
+import { Order } from "../types";
 
 // ── Age helpers ───────────────────────────────────────────────────────────────
 const getAgeMinutes = (createdAt: string) => {
@@ -91,14 +93,16 @@ export const OrderCard = ({
   order,
   onUpdateStatus,
 }: {
-  order: any;
+  order: Order;
   onUpdateStatus: (id: string, status: string) => void;
 }) => {
   const [open, setOpen] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
   const { status } = order;
   const isCompleted = status === "completed";
   const isCancelled = status === "cancelled";
   const isDone = isCompleted || isCancelled;
+  const isPickup = order.table_number === "STORE-PICKUP" || order.table_number.startsWith("PUP-");
 
   // Derive border urgency for the card itself
   const [mins, setMins] = useState(() => getAgeMinutes(order.created_at));
@@ -127,13 +131,77 @@ export const OrderCard = ({
       className="a-fade"
       style={{
         background: C.surface,
-        borderRadius: 14,
-        border: `1.5px solid ${cardBorder}`,
+        borderRadius: 0,
+        border: `1px solid ${cardBorder}`,
         overflow: "hidden",
         opacity: isDone ? 0.6 : 1,
         transition: "border-color 0.3s",
       }}
     >
+      {/* ── Receipt Modal ── */}
+      {showReceipt && order.receipt_url && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowReceipt(false);
+          }}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backdropFilter: "blur(4px)",
+            WebkitBackdropFilter: "blur(4px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+            cursor: "zoom-out",
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowReceipt(false);
+            }}
+            style={{
+              position: "absolute",
+              top: 24,
+              right: 24,
+              background: "rgba(255, 255, 255, 0.15)",
+              border: "none",
+              color: "white",
+              cursor: "pointer",
+              padding: 10,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 10000,
+              backdropFilter: "blur(8px)"
+            }}
+          >
+            <X size={24} />
+          </button>
+          <img 
+            src={order.receipt_url} 
+            alt="GCash Receipt" 
+            style={{ 
+              maxWidth: "100%", 
+              maxHeight: "100%", 
+              objectFit: "contain", 
+              borderRadius: 8, 
+              boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+              cursor: "default"
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       {/* ── Collapsed row ── */}
       <div
         onClick={() => setOpen((v) => !v)}
@@ -150,50 +218,88 @@ export const OrderCard = ({
           style={{
             width: 46,
             height: 46,
-            borderRadius: 12,
+            borderRadius: 0,
             flexShrink: 0,
             background:
-              level === "urgent" && !isDone
-                ? "#FEE2E2"
-                : level === "warm" && !isDone
-                  ? "#FEF3C7"
-                  : isDone
-                    ? C.lift
-                    : C.ink,
+              isPickup && !isDone
+                ? "#F3E8FF" // purple highlight for pickup
+                : level === "urgent" && !isDone
+                  ? "#FEE2E2"
+                  : level === "warm" && !isDone
+                    ? "#FEF3C7"
+                    : isDone
+                      ? C.lift
+                      : C.ink,
             color:
-              level === "urgent" && !isDone
-                ? "#991B1B"
-                : level === "warm" && !isDone
-                  ? "#92400E"
-                  : isDone
-                    ? C.mid
-                    : C.white,
+              isPickup && !isDone
+                ? "#6B21A8"
+                : level === "urgent" && !isDone
+                  ? "#991B1B"
+                  : level === "warm" && !isDone
+                    ? "#92400E"
+                    : isDone
+                      ? C.mid
+                      : C.white,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: 18,
-            fontWeight: 500,
-            letterSpacing: "-0.02em",
+            fontWeight: 600,
+            letterSpacing: isPickup ? "0.02em" : "-0.02em",
             transition: "background 0.3s, color 0.3s",
           }}
         >
-          {order.table_number}
+          {isPickup ? "PU" : order.table_number}
         </div>
 
         {/* Name + status + age */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
-              fontSize: 16,
-              fontWeight: 500,
-              color: C.ink,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
               marginBottom: 6,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
             }}
           >
-            {order.customer_name}
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 500,
+                color: C.ink,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {order.customer_name}
+            </div>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+                padding: "3px 6px",
+                borderRadius: 4,
+                backgroundColor: isPickup ? "#F3E8FF" : "#E0F2FE", // Purple for Pickup, Blue for In-House
+                color: isPickup ? "#6B21A8" : "#0369A1",
+                textTransform: "uppercase"
+              }}
+            >
+              {isPickup ? "Pickup" : "In-House"}
+            </span>
+            {isPickup && (
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: C.mid,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {order.table_number.startsWith("PUP-") ? order.table_number : "STORE-PICKUP"}
+              </span>
+            )}
           </div>
           <div
             style={{
@@ -219,7 +325,7 @@ export const OrderCard = ({
               marginBottom: 4,
             }}
           >
-            ₱{Number(order.total_price).toFixed(0)}
+            ₱{formatPrice(order.total_price)}
           </div>
           <div style={{ color: C.faint }}>
             {open ? (
@@ -240,13 +346,13 @@ export const OrderCard = ({
             <div
               style={{
                 background: C.lift,
-                borderRadius: 10,
+                borderRadius: 0,
                 padding: "14px",
                 marginBottom: 14,
               }}
             >
               <Lbl t="Items ordered" />
-              {order.order_items?.map((item: any, i: number) => (
+              {order.order_items?.map((item, i: number) => (
                 <div
                   key={i}
                   style={{
@@ -272,7 +378,7 @@ export const OrderCard = ({
                   </span>
                   {item.price && (
                     <span style={{ fontSize: 14, color: C.mid }}>
-                      ₱{(item.price * item.quantity).toFixed(0)}
+                      ₱{formatPrice(item.price * item.quantity)}
                     </span>
                   )}
                 </div>
@@ -290,12 +396,23 @@ export const OrderCard = ({
               </span>
             </div>
 
-            {/* Payment method */}
-            <div style={{ fontSize: 13, color: C.faint, marginBottom: 14 }}>
-              Payment —{" "}
-              <span style={{ color: C.mid, fontWeight: 500 }}>
-                {order.payment_method === "gcash" ? "GCash" : "Pay at Counter"}
-              </span>
+            {/* Payment method + Receipt */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: C.faint }}>
+                Payment —{" "}
+                <span style={{ color: C.mid, fontWeight: 500 }}>
+                  {order.payment_method === "gcash" ? "GCash" : "Pay at Counter"}
+                </span>
+              </div>
+              {order.receipt_url && (
+                <Btn
+                  v="outline"
+                  onClick={() => setShowReceipt(true)}
+                  sx={{ fontSize: 12, padding: "6px 12px", background: "transparent" }}
+                >
+                  <Receipt size={14} strokeWidth={1.5} style={{ marginRight: 4 }} /> View Receipt
+                </Btn>
+              )}
             </div>
 
             {/* ── Action buttons by status ── */}
@@ -324,23 +441,35 @@ export const OrderCard = ({
               </div>
             )}
 
-            {/* PREPARING → Mark as Served */}
+            {/* PREPARING → Mark as Served OR Ready for Pickup */}
             {status === "preparing" && (
               <div style={{ display: "flex", gap: 8 }}>
-                {order.receipt_url && (
+                {isPickup ? (
                   <Btn
-                    v="outline"
-                    onClick={() => window.open(order.receipt_url, "_blank")}
-                    sx={{ fontSize: 14, padding: "11px 14px" }}
+                    onClick={() => onUpdateStatus(order.id, "ready_for_pickup")}
+                    sx={{ flex: 1, fontSize: 14, background: "#8B5CF6", color: "white" }}
                   >
-                    <Receipt size={14} strokeWidth={1.5} /> Receipt
+                    <Check size={14} strokeWidth={2} /> Ready for Pickup
+                  </Btn>
+                ) : (
+                  <Btn
+                    onClick={() => onUpdateStatus(order.id, "completed")}
+                    sx={{ flex: 1, fontSize: 14 }}
+                  >
+                    <Check size={14} strokeWidth={2} /> Mark as Served
                   </Btn>
                 )}
+              </div>
+            )}
+
+            {/* READY FOR PICKUP → Mark as Picked Up */}
+            {status === "ready_for_pickup" && (
+              <div style={{ display: "flex", gap: 8 }}>
                 <Btn
                   onClick={() => onUpdateStatus(order.id, "completed")}
                   sx={{ flex: 1, fontSize: 14 }}
                 >
-                  <Check size={14} strokeWidth={2} /> Mark as Served
+                  <CheckCircle2 size={14} strokeWidth={2} /> Mark as Picked Up
                 </Btn>
               </div>
             )}

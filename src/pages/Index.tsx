@@ -1,30 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CartProvider } from "@/contexts/CartContext";
 import Header from "@/components/Header";
 import MenuGrid from "@/components/MenuGrid";
 import CartBar from "@/components/CartBar";
 import CartDrawer from "@/components/CartDrawer";
 import CheckoutDrawer from "@/components/CheckoutDrawer";
-import OrderConfirmation from "@/components/OrderConfirmation";
+import OrderStatusBar from "@/components/OrderStatusBar";
+import OrderTracker from "@/components/OrderTracker";
 import Footer from "@/components/Footer";
+import { AnimatePresence } from "framer-motion";
 
-type View = "menu" | "confirmed";
+const STORAGE_KEY = "papi_active_order_id";
 
-const IndexContent = () => {
-  const [view, setView] = useState<View>("menu");
+const IndexContent = ({ isPickup = false }: { isPickup?: boolean }) => {
+  // Restore any in-progress order from localStorage (survives refresh)
+  const [orderId, setOrderId] = useState<string | null>(() =>
+    localStorage.getItem(STORAGE_KEY)
+  );
+  const [trackerOpen, setTrackerOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
-  if (view === "confirmed") {
-    return <OrderConfirmation onBack={() => setView("menu")} />;
-  }
+  const handleOrderConfirmed = (id: string) => {
+    setOrderId(id);
+    setCheckoutOpen(false);
+    // Auto-open tracker briefly so customer sees their order status right away
+    setTimeout(() => setTrackerOpen(true), 400);
+  };
+
+  const handleDismiss = () => {
+    // Called by OrderStatusBar when order is completed or cancelled
+    localStorage.removeItem(STORAGE_KEY);
+    setOrderId(null);
+    setTrackerOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <MenuGrid />
       <Footer />
+
+      {/* Cart bar — only when no active order, or slides above status bar */}
       <CartBar onOpen={() => setCartOpen(true)} />
+
+      {/* Floating live order status bar — sits above the cart bar */}
+      {orderId && (
+        <div style={{ paddingBottom: 72 /* leave room for CartBar if visible */ }}>
+          <OrderStatusBar
+            orderId={orderId}
+            onTap={() => setTrackerOpen(true)}
+            onDismiss={handleDismiss}
+          />
+        </div>
+      )}
+
       <CartDrawer
         open={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -33,21 +63,30 @@ const IndexContent = () => {
           setTimeout(() => setCheckoutOpen(true), 300);
         }}
       />
+
       <CheckoutDrawer
         open={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
-        onConfirm={() => {
-          setCheckoutOpen(false);
-          setView("confirmed");
-        }}
+        onConfirm={handleOrderConfirmed}
+        isPickup={isPickup}
       />
+
+      {/* Order tracker sheet — slides up over the menu */}
+      <AnimatePresence>
+        {trackerOpen && orderId && (
+          <OrderTracker
+            orderId={orderId}
+            onClose={() => setTrackerOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-const Index = () => (
+const Index = ({ isPickup = false }: { isPickup?: boolean }) => (
   <CartProvider>
-    <IndexContent />
+    <IndexContent isPickup={isPickup} />
   </CartProvider>
 );
 

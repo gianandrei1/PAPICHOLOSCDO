@@ -17,14 +17,14 @@ export const Pill = ({ status }: { status: string }) => {
         color: s.fg,
         background: s.bg,
         padding: "4px 10px",
-        borderRadius: 99,
+        borderRadius: 0,
       }}
     >
       <span
         style={{
           width: 5,
           height: 5,
-          borderRadius: "50%",
+          borderRadius: 0,
           background: s.fg,
           opacity: 0.55,
           flexShrink: 0,
@@ -60,12 +60,12 @@ export const Btn = ({
     outline: {
       background: C.white,
       color: C.body,
-      border: `1.5px solid ${C.border}`,
+      border: `1px solid ${C.border}`,
     },
     ghost: {
       background: "transparent",
       color: C.mid,
-      border: `1.5px solid ${C.border}`,
+      border: `1px solid ${C.border}`,
     },
   };
   return (
@@ -80,9 +80,9 @@ export const Btn = ({
         gap: 6,
         padding: "11px 18px",
         fontSize: 14,
-        fontWeight: 500,
-        borderRadius: 10,
-        letterSpacing: "0.01em",
+        fontWeight: 600,
+        borderRadius: 0,
+        letterSpacing: "0.05em",
         transition: "opacity 0.15s",
         fontFamily: f,
         opacity: disabled ? 0.4 : 1,

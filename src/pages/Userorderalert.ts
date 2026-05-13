@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Order } from "../types";
 
 // ── AudioContext singleton — created once, reused across calls ────────────────
 let audioCtx: AudioContext | null = null;
@@ -6,7 +7,7 @@ let audioCtx: AudioContext | null = null;
 const getAudioCtx = (): AudioContext | null => {
   if (audioCtx && audioCtx.state !== "closed") return audioCtx;
   try {
-    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     return audioCtx;
   } catch {
     return null;
@@ -58,12 +59,11 @@ export const playDing = () => {
   }
 };
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
-// Usage: call useOrderAlert(orders) inside the Admin component.
-// Plays a ding whenever a genuinely new order appears.
-// Does NOT fire on the initial data load — only on live incoming orders.
-
-export const useOrderAlert = (orders: any[]) => {
+/**
+ * Hook to play a sound alert when new orders arrive.
+ * @param orders List of orders to monitor.
+ */
+export const useOrderAlert = (orders: Order[]) => {
   const seenIds = useRef<Set<string>>(new Set());
   const initialised = useRef(false);
 
@@ -73,6 +73,7 @@ export const useOrderAlert = (orders: any[]) => {
       initialised.current = true;
       return;
     }
+
     let hasNew = false;
     orders.forEach((o) => {
       if (!seenIds.current.has(o.id)) {
@@ -80,6 +81,9 @@ export const useOrderAlert = (orders: any[]) => {
         hasNew = true;
       }
     });
-    if (hasNew) playDing();
+
+    if (hasNew) {
+      playDing();
+    }
   }, [orders]);
-};
+};

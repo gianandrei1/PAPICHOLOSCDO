@@ -1,3 +1,4 @@
+import { formatPrice } from "@/lib/utils";
 import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 import {
@@ -8,10 +9,11 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-// Add these imports for the dropdown
+import { ImageIcon, UploadCloud, Loader2, Check } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+
+// ── shadcn Select imports (unchanged) ────────────────────────────────
 import {
   Select,
   SelectContent,
@@ -19,30 +21,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ImageIcon, UploadCloud, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 
 interface CheckoutDrawerProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (orderId: string) => void;
+  isPickup?: boolean;
 }
 
-const CheckoutDrawer = ({ open, onClose, onConfirm }: CheckoutDrawerProps) => {
+const CheckoutDrawer = ({ open, onClose, onConfirm, isPickup = false }: CheckoutDrawerProps) => {
   const { totalPrice, clearCart, items } = useCart();
   const [name, setName] = useState("");
-  const [payment, setPayment] = useState("counter");
+  const [payment, setPayment] = useState(isPickup ? "gcash" : "counter");
   const [receipt, setReceipt] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ── Read table number from URL ?table=X automatically ─────────────────────
+  // ── Read table number from URL ?table=X automatically ─────────────
   const urlTable =
     new URLSearchParams(window.location.search).get("table") ?? "";
-  const [tableNumber, setTableNumber] = useState(urlTable);
-  const tableFromUrl = !!urlTable;
+  const [tableNumber, setTableNumber] = useState(() => 
+    isPickup ? `PUP-${Math.random().toString(36).substring(2, 6).toUpperCase()}` : urlTable
+  );
+  const tableFromUrl = !!urlTable || isPickup;
 
-  // Array for numbers 1 to 10 (fallback if no URL param)
   const tableOptions = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +54,7 @@ const CheckoutDrawer = ({ open, onClose, onConfirm }: CheckoutDrawerProps) => {
       return;
     }
 
-    if (payment === "online" && !receipt) {
+    if (payment === "gcash" && !receipt) {
       toast.error("Please upload your GCash receipt to proceed.");
       return;
     }
@@ -63,7 +64,7 @@ const CheckoutDrawer = ({ open, onClose, onConfirm }: CheckoutDrawerProps) => {
     try {
       let receiptUrl = "";
 
-      if (payment === "online" && receipt) {
+      if (payment === "gcash" && receipt) {
         const fileExt = receipt.name.split(".").pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `receipts/${fileName}`;
@@ -81,208 +82,521 @@ const CheckoutDrawer = ({ open, onClose, onConfirm }: CheckoutDrawerProps) => {
         receiptUrl = urlData.publicUrl;
       }
 
-      const { error: orderError } = await supabase.from("orders").insert([
-        {
-          customer_name: name,
-          table_number: tableNumber,
-          total_price: totalPrice,
-          payment_method: payment,
-          receipt_url: receiptUrl,
-          status: "pending",
-          order_items: items,
-        },
-      ]);
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .insert([
+          {
+            customer_name: name,
+            table_number: tableNumber,
+            total_price: totalPrice,
+            payment_method: payment,
+            receipt_url: receiptUrl,
+            status: "pending",
+            order_items: items,
+          },
+        ])
+        .select("id")
+        .single();
 
       if (orderError) throw orderError;
 
+      const newOrderId = orderData?.id as string;
+      // Persist for accountless tracking
+      localStorage.setItem("papi_active_order_id", newOrderId);
+
       toast.success("Order placed successfully!");
       clearCart();
-      onConfirm();
-    } catch (error: any) {
-      toast.error("Error: " + error.message);
+      onConfirm(newOrderId);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error("Error: " + message);
       console.error(error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // ── Shared label style ─────────────────────────────────────────────
+  const labelStyle: React.CSSProperties = {
+    fontFamily: "'Inter', sans-serif",
+    fontSize: "10px",
+    fontWeight: 600,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: "#8e9192",
+    display: "block",
+    marginBottom: "8px",
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    backgroundColor: "#0a0a0a",
+    border: "1px solid #444748",
+    borderRadius: 0,
+    color: "#ffffff",
+    padding: "12px 14px",
+    fontFamily: "'Inter', sans-serif",
+    fontSize: "14px",
+    outline: "none",
+    transition: "border-color 0.15s ease",
+  };
+
   return (
     <Drawer open={open} onOpenChange={(o) => !o && !isSubmitting && onClose()}>
-      <DrawerContent className="max-h-[95vh]">
-        <DrawerHeader>
-          <DrawerTitle className="text-center">Confirm Your Order</DrawerTitle>
+      <DrawerContent
+        style={{
+          backgroundColor: "#141313",
+          border: "1px solid #444748",
+          borderBottom: "none",
+          borderRadius: 0,
+          maxHeight: "95vh",
+        }}
+      >
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <DrawerHeader
+          style={{
+            borderBottom: "1px solid #444748",
+            padding: "20px",
+            textAlign: "center",
+          }}
+        >
+          <DrawerTitle
+            style={{
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: "13px",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "#ffffff",
+            }}
+          >
+            Confirm Your Order
+          </DrawerTitle>
         </DrawerHeader>
 
+        {/* ── Form ───────────────────────────────────────────────── */}
         <form
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto px-6 space-y-6"
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "24px 20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "24px",
+          }}
         >
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Your Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Juan D."
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  disabled={isSubmitting}
-                  className="rounded-xl border-black/10 focus:border-black"
-                />
-              </div>
-
-              {/* ── Table number — auto from QR or manual select ── */}
-              <div className="space-y-2">
-                <Label htmlFor="table">Table #</Label>
-                {tableFromUrl ? (
-                  // Locked — came from QR code scan
-                  <div className="flex items-center gap-2 rounded-xl border border-black bg-black text-white px-4 py-2.5 text-sm font-semibold">
-                    <span>Table {tableNumber}</span>
-                    <span className="ml-auto text-xs font-normal opacity-60">
-                      via QR
-                    </span>
-                  </div>
-                ) : (
-                  // Manual select — no QR used
-                  <Select
-                    value={tableNumber}
-                    onValueChange={setTableNumber}
-                    disabled={isSubmitting}
-                    required
-                  >
-                    <SelectTrigger className="rounded-xl border-black/10 focus:border-black">
-                      <SelectValue placeholder="Select table" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tableOptions.map((num) => (
-                        <SelectItem key={num} value={num}>
-                          Table {num}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold text-black">
-                Payment Method
-              </Label>
-              <RadioGroup
-                value={payment}
-                onValueChange={setPayment}
+          {/* Name + Table grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            {/* Name */}
+            <div>
+              <label htmlFor="name" style={labelStyle}>Your Name</label>
+              <input
+                id="name"
+                type="text"
+                placeholder="Juan D."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
                 disabled={isSubmitting}
-                className="grid grid-cols-1 gap-2"
-              >
-                <div
-                  className={`flex items-center gap-3 rounded-xl border p-4 transition-all ${payment === "counter" ? "border-black bg-black/5" : "border-gray-200"}`}
-                >
-                  <RadioGroupItem value="counter" id="counter" />
-                  <Label
-                    htmlFor="counter"
-                    className="cursor-pointer flex-1 font-medium text-black"
-                  >
-                    Pay at Counter
-                  </Label>
-                </div>
-                <div
-                  className={`flex items-center gap-3 rounded-xl border p-4 transition-all ${payment === "online" ? "border-black bg-black/5" : "border-gray-200"}`}
-                >
-                  <RadioGroupItem value="online" id="online" />
-                  <Label
-                    htmlFor="online"
-                    className="cursor-pointer flex-1 font-medium text-blue-600"
-                  >
-                    GCash / Online
-                  </Label>
-                </div>
-              </RadioGroup>
+                style={inputStyle}
+                onFocus={(e) => {
+                  (e.currentTarget as HTMLInputElement).style.borderColor = "#ffffff";
+                }}
+                onBlur={(e) => {
+                  (e.currentTarget as HTMLInputElement).style.borderColor = "#444748";
+                }}
+              />
             </div>
 
-            {payment === "online" && (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-4 rounded-2xl bg-gray-50 p-4 border border-dashed border-gray-300 text-black">
-                <div className="text-center space-y-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                    Scan to Pay via GCash
-                  </p>
-                  <div className="mx-auto w-40 h-40 bg-white border-2 border-black rounded-lg flex items-center justify-center overflow-hidden">
-                    <img
-                      src="/gcash-qr.jpg"
-                      alt="GCash QR Code"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <p className="text-sm font-semibold">Papicholo's CDO</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="receipt"
-                    className="text-xs font-bold uppercase text-gray-500"
+            {/* Table Number */}
+            <div>
+              <label htmlFor="table" style={labelStyle}>Table #</label>
+              {tableFromUrl ? (
+                <div
+                  style={{
+                    ...inputStyle,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    backgroundColor: "#1c1b1b",
+                    borderColor: "#ffffff",
+                  }}
+                >
+                  <span style={{ fontWeight: 600, color: "#ffffff" }}>
+                    {isPickup ? `Pickup Code: ${tableNumber}` : `Table ${tableNumber}`}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      color: "#8e9192",
+                      letterSpacing: "0.08em",
+                    }}
                   >
-                    Attach Receipt
-                  </Label>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      id="receipt"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setReceipt(e.target.files ? e.target.files[0] : null)
-                      }
-                      className="hidden"
-                      required={payment === "online"}
-                      disabled={isSubmitting}
-                    />
-                    <Label
-                      htmlFor="receipt"
-                      className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-white p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      {receipt ? (
-                        <div className="flex items-center gap-2 text-green-600 font-medium">
-                          <ImageIcon size={20} />
-                          <span className="text-sm truncate max-w-[200px]">
-                            {receipt.name}
-                          </span>
-                        </div>
-                      ) : (
-                        <>
-                          <UploadCloud className="text-gray-400" />
-                          <span className="text-sm text-gray-500">
-                            Click to upload screenshot
-                          </span>
-                        </>
-                      )}
-                    </Label>
-                  </div>
+                    {isPickup ? "TRACKING ID" : "via QR"}
+                  </span>
                 </div>
-              </div>
-            )}
+              ) : (
+                <Select
+                  value={tableNumber}
+                  onValueChange={setTableNumber}
+                  disabled={isSubmitting}
+                  required
+                >
+                  <SelectTrigger
+                    style={{
+                      ...inputStyle,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <SelectValue placeholder="Select table" />
+                  </SelectTrigger>
+                  <SelectContent
+                    style={{
+                      backgroundColor: "#141313",
+                      border: "1px solid #444748",
+                      borderRadius: 0,
+                    }}
+                  >
+                    {tableOptions.map((num) => (
+                      <SelectItem
+                        key={num}
+                        value={num}
+                        style={{
+                          fontFamily: "'Inter', sans-serif",
+                          color: "#ffffff",
+                          borderRadius: 0,
+                        }}
+                      >
+                        Table {num}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
 
-          <DrawerFooter className="px-0 pb-10">
-            <div className="flex items-center justify-between mb-4 border-t pt-4">
-              <span className="text-sm font-medium text-muted-foreground">
+          {/* Payment Method */}
+          <div>
+            <label style={labelStyle}>Payment Method</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {/* Pay at Counter (hidden for pickup) */}
+              {!isPickup && (
+                <button
+                  type="button"
+                  onClick={() => setPayment("counter")}
+                  disabled={isSubmitting}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "14px",
+                    padding: "16px",
+                    backgroundColor:
+                      payment === "counter" ? "#1c1b1b" : "#0a0a0a",
+                    border:
+                      payment === "counter"
+                        ? "1px solid #ffffff"
+                        : "1px solid #444748",
+                    borderRadius: 0,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      border: "1px solid",
+                      borderColor: payment === "counter" ? "#ffffff" : "#444748",
+                      borderRadius: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {payment === "counter" && (
+                      <Check
+                        style={{ width: "12px", height: "12px", color: "#ffffff" }}
+                        strokeWidth={3}
+                      />
+                    )}
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#ffffff",
+                    }}
+                  >
+                    Pay at Counter
+                  </span>
+                </button>
+              )}
+
+              {/* GCash / Online */}
+              <button
+                type="button"
+                onClick={() => setPayment("gcash")}
+                disabled={isSubmitting}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "14px",
+                  padding: "16px",
+                  backgroundColor:
+                    payment === "gcash" ? "#1c1b1b" : "#0a0a0a",
+                  border:
+                    payment === "gcash"
+                      ? "1px solid #ffffff"
+                      : "1px solid #444748",
+                  borderRadius: 0,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  textAlign: "left",
+                  width: "100%",
+                }}
+              >
+                <div
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    border: "1px solid",
+                    borderColor: payment === "gcash" ? "#ffffff" : "#444748",
+                    borderRadius: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {payment === "gcash" && (
+                    <Check
+                      style={{ width: "12px", height: "12px", color: "#ffffff" }}
+                      strokeWidth={3}
+                    />
+                  )}
+                </div>
+                <span
+                  style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color: "#c6c6c7",
+                  }}
+                >
+                  GCash / Online
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* GCash QR + Receipt Upload */}
+          {payment === "gcash" && (
+            <div
+              style={{
+                backgroundColor: "#0a0a0a",
+                border: "1px solid #444748",
+                borderRadius: 0,
+                padding: "20px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+                animation: "fadeIn 0.25s ease",
+              }}
+            >
+              {/* QR Section */}
+              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                <p style={{ ...labelStyle, marginBottom: 0 }}>Scan to Pay via GCash</p>
+                <div
+                  style={{
+                    width: "160px",
+                    height: "160px",
+                    backgroundColor: "#ffffff",
+                    border: "2px solid #ffffff",
+                    borderRadius: 0,
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <img
+                    src="/gcash-qr.jpg"
+                    alt="GCash QR Code"
+                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                  />
+                </div>
+                <p
+                  style={{
+                    fontFamily: "'Montserrat', sans-serif",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    color: "#ffffff",
+                  }}
+                >
+                  Papicholo's CDO
+                </p>
+              </div>
+
+              {/* Receipt Upload */}
+              <div>
+                <label htmlFor="receipt" style={labelStyle}>
+                  Attach Receipt
+                </label>
+                <input
+                  type="file"
+                  id="receipt"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setReceipt(e.target.files ? e.target.files[0] : null)
+                  }
+                  style={{ display: "none" }}
+                  required={payment === "gcash"}
+                  disabled={isSubmitting}
+                />
+                <label
+                  htmlFor="receipt"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    padding: "20px",
+                    border: "1px dashed #444748",
+                    borderRadius: 0,
+                    cursor: "pointer",
+                    transition: "border-color 0.15s ease, background 0.15s ease",
+                    backgroundColor: receipt ? "#1c1b1b" : "transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLLabelElement).style.borderColor = "#8e9192";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLLabelElement).style.borderColor = "#444748";
+                  }}
+                >
+                  {receipt ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        color: "#e5e2e1",
+                      }}
+                    >
+                      <ImageIcon style={{ width: "18px", height: "18px" }} />
+                      <span
+                        style={{
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: "13px",
+                          maxWidth: "200px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {receipt.name}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <UploadCloud
+                        style={{ width: "20px", height: "20px", color: "#8e9192" }}
+                      />
+                      <span
+                        style={{
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: "12px",
+                          color: "#8e9192",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        Click to upload screenshot
+                      </span>
+                    </>
+                  )}
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* ── Footer ───────────────────────────────────────────── */}
+          <DrawerFooter style={{ padding: "0", marginTop: "auto" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderTop: "1px solid #444748",
+                paddingTop: "20px",
+                marginBottom: "16px",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: "#8e9192",
+                }}
+              >
                 Amount to Pay
               </span>
-              <span className="text-2xl font-black text-black">
-                ₱{totalPrice.toFixed(2)}
+              <span
+                style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontSize: "28px",
+                  fontWeight: 800,
+                  color: "#ffffff",
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                ₱{formatPrice(totalPrice)}
               </span>
             </div>
             <Button
               type="submit"
-              size="lg"
               disabled={isSubmitting}
-              className="w-full rounded-xl text-md font-bold py-7 bg-black hover:bg-zinc-800 text-white"
+              style={{
+                width: "100%",
+                backgroundColor: "#ffffff",
+                color: "#141313",
+                border: "none",
+                borderRadius: 0,
+                padding: "20px",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+                opacity: isSubmitting ? 0.7 : 1,
+                height: "auto",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+              }}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                  <Loader2
+                    style={{ width: "14px", height: "14px" }}
+                    className="animate-spin"
+                  />
                   Processing...
                 </>
-              ) : payment === "online" ? (
+              ) : payment === "gcash" ? (
                 "Submit Receipt & Order"
               ) : (
                 "Place Order"

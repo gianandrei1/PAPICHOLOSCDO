@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut,
   ClipboardList,
@@ -22,11 +23,12 @@ export const AdminTopBar = ({ pending, onLogout }: TopBarProps) => (
       position: "sticky",
       top: 0,
       zIndex: 30,
-      background: "rgba(247,247,247,0.92)",
-      backdropFilter: "blur(10px)",
-      borderBottom: `1px solid ${C.border}`,
+      background: "rgba(20, 19, 19, 0.85)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      borderBottom: `1px solid rgba(255, 255, 255, 0.08)`,
       padding: "0 18px",
-      height: 56,
+      height: 60,
       display: "grid",
       gridTemplateColumns: "1fr auto 1fr",
       alignItems: "center",
@@ -37,53 +39,69 @@ export const AdminTopBar = ({ pending, onLogout }: TopBarProps) => (
       src="/PAPICHOLOS-LOGO.png"
       alt="Papicholo's CDO"
       style={{
-        height: 40,
+        height: 44,
         width: "auto",
         objectFit: "contain",
         display: "block",
+        filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.3))",
       }}
     />
     <div
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 8,
+        gap: 10,
         justifyContent: "flex-end",
       }}
     >
-      {pending > 0 && (
-        <span
-          style={{
-            background: C.ink,
-            color: C.white,
-            fontSize: 12,
-            fontWeight: 500,
-            padding: "4px 11px",
-            borderRadius: 99,
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}
-        >
-          {pending} pending
-        </span>
-      )}
+      <AnimatePresence>
+        {pending > 0 && (
+          <motion.span
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            style={{
+              background: "#fff",
+              color: "#000",
+              fontSize: 11,
+              fontWeight: 700,
+              padding: "4px 10px",
+              borderRadius: 99,
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+              boxShadow: "0 2px 10px rgba(255,255,255,0.2)",
+            }}
+          >
+            {pending} PENDING
+          </motion.span>
+        )}
+      </AnimatePresence>
       <button
         onClick={onLogout}
         style={{
-          background: C.surface,
-          border: `1.5px solid ${C.border}`,
-          borderRadius: 9,
-          padding: "7px 12px",
+          background: "rgba(255, 255, 255, 0.05)",
+          border: `1px solid rgba(255, 255, 255, 0.1)`,
+          borderRadius: 10,
+          padding: "8px 14px",
           fontSize: 13,
-          fontWeight: 400,
-          color: C.mid,
+          fontWeight: 500,
+          color: "rgba(255, 255, 255, 0.7)",
           display: "flex",
           alignItems: "center",
-          gap: 5,
+          gap: 6,
           cursor: "pointer",
+          transition: "all 0.2s",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+          e.currentTarget.style.color = "#fff";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+          e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
         }}
       >
-        <LogOut size={13} strokeWidth={1.5} /> Logout
+        <LogOut size={14} strokeWidth={1.5} /> Logout
       </button>
     </div>
   </header>
@@ -96,7 +114,7 @@ interface BottomNavProps {
   pending: number;
 }
 
-const NAV: { key: TabKey; Icon: any; label: string }[] = [
+const NAV: { key: TabKey; Icon: React.ElementType; label: string }[] = [
   { key: "orders", Icon: ClipboardList, label: "Orders" },
   { key: "inventory", Icon: LayoutGrid, label: "Inventory" },
   { key: "history", Icon: History, label: "History" },
@@ -112,13 +130,14 @@ export const AdminBottomNav = ({ tab, setTab, pending }: BottomNavProps) => (
       left: 0,
       right: 0,
       zIndex: 50,
-      background: "rgba(255,255,255,0.96)",
-      backdropFilter: "blur(10px)",
-      borderTop: `1px solid ${C.border}`,
+      background: "rgba(20, 19, 19, 0.85)",
+      backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
+      borderTop: `1px solid rgba(255, 255, 255, 0.08)`,
       display: "flex",
-      padding: "10px 12px",
+      padding: "10px 10px",
       paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))",
-      gap: 8,
+      gap: 6,
     }}
   >
     {NAV.map(({ key, Icon, label }) => {
@@ -131,17 +150,18 @@ export const AdminBottomNav = ({ tab, setTab, pending }: BottomNavProps) => (
           style={{
             flex: 1,
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: 7,
-            padding: "10px 8px",
+            gap: 4,
+            padding: "8px 4px",
             border: "none",
-            borderRadius: 99,
-            background: active ? C.ink : "transparent",
-            color: active ? C.white : C.faint,
-            fontSize: 12,
-            fontWeight: 500,
-            transition: "all 0.15s",
+            borderRadius: 12,
+            background: active ? "rgba(255, 255, 255, 0.1)" : "transparent",
+            color: active ? "#fff" : "rgba(255, 255, 255, 0.4)",
+            fontSize: 11,
+            fontWeight: active ? 600 : 500,
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
             position: "relative",
             cursor: "pointer",
           }}
@@ -151,32 +171,52 @@ export const AdminBottomNav = ({ tab, setTab, pending }: BottomNavProps) => (
               position: "relative",
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <Icon size={17} strokeWidth={active ? 1.75 : 1.5} />
-            {badge > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: -5,
-                  right: -8,
-                  background: active ? C.white : C.ink,
-                  color: active ? C.ink : C.white,
-                  borderRadius: "50%",
-                  width: 15,
-                  height: 15,
-                  fontSize: 9,
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {badge}
-              </span>
-            )}
+            <Icon size={20} strokeWidth={active ? 2.5 : 1.5} />
+            <AnimatePresence>
+              {badge > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  style={{
+                    position: "absolute",
+                    top: -6,
+                    right: -10,
+                    background: "#fff",
+                    color: "#000",
+                    borderRadius: "50%",
+                    minWidth: 16,
+                    height: 16,
+                    fontSize: 9,
+                    fontWeight: 800,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid rgba(20, 19, 19, 0.8)",
+                  }}
+                >
+                  {badge}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
           <span>{label}</span>
+          {active && (
+            <motion.div
+              layoutId="bottomNavDot"
+              style={{
+                position: "absolute",
+                bottom: 2,
+                width: 4,
+                height: 4,
+                borderRadius: "50%",
+                background: "#fff",
+              }}
+            />
+          )}
         </button>
       );
     })}

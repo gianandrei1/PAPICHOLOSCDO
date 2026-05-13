@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { Loader2, Plus, Tag } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -10,86 +11,17 @@ import { StatCards } from "./StatCards";
 import { OrderCard } from "./OrderCard";
 import { HistoryPanel } from "./Historypanel";
 import { MenuItemCard } from "./MenuItemCard";
+import { MenuItemModal } from "./MenuItemModal";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminTopBar, AdminBottomNav } from "./AdminNav";
+import { motion, AnimatePresence } from "framer-motion";
 import { CategoryManager } from "./Categorymanager";
 import { CarouselManager } from "./Carouselmanager";
 
 type TabKey = "orders" | "inventory" | "history" | "carousel";
 
-// ── Inlined sound alert ────────────────────────────────────────────────────────
-let _audioCtx: AudioContext | null = null;
-const _getCtx = () => {
-  if (_audioCtx && _audioCtx.state !== "closed") return _audioCtx;
-  try {
-    _audioCtx = new (
-      window.AudioContext || (window as any).webkitAudioContext
-    )();
-  } catch {
-    /* not supported */
-  }
-  return _audioCtx;
-};
-const _unlock = () => {
-  const c = _getCtx();
-  if (c?.state === "suspended") c.resume();
-};
-if (typeof window !== "undefined") {
-  window.addEventListener("click", _unlock);
-  window.addEventListener("touchstart", _unlock);
-}
-const _playDing = () => {
-  const ctx = _getCtx();
-  if (!ctx) return;
-  const beep = (freq: number, start: number, dur: number) => {
-    try {
-      const o = ctx.createOscillator(),
-        g = ctx.createGain();
-      o.connect(g);
-      g.connect(ctx.destination);
-      o.type = "sine";
-      o.frequency.setValueAtTime(freq, ctx.currentTime + start);
-      g.gain.setValueAtTime(0, ctx.currentTime + start);
-      g.gain.linearRampToValueAtTime(0.35, ctx.currentTime + start + 0.02);
-      g.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
-      o.start(ctx.currentTime + start);
-      o.stop(ctx.currentTime + start + dur + 0.05);
-    } catch {
-      /* ignore */
-    }
-  };
-  const play = () => {
-    beep(784, 0, 0.18);
-    beep(988, 0.22, 0.3);
-  };
-  ctx.state === "suspended"
-    ? ctx
-        .resume()
-        .then(play)
-        .catch(() => {})
-    : play();
-};
-const _useOrderAlert = (
-  orders: any[],
-  seenRef: React.MutableRefObject<Set<string>>,
-  initRef: React.MutableRefObject<boolean>,
-) => {
-  useEffect(() => {
-    if (!initRef.current) {
-      orders.forEach((o) => seenRef.current.add(o.id));
-      initRef.current = true;
-      return;
-    }
-    let hasNew = false;
-    orders.forEach((o) => {
-      if (!seenRef.current.has(o.id)) {
-        seenRef.current.add(o.id);
-        hasNew = true;
-      }
-    });
-    if (hasNew) _playDing();
-  }, [orders]); // eslint-disable-line react-hooks/exhaustive-deps
-};
+import { useOrderAlert } from "./Userorderalert";
+import { MenuItem, Order, CarouselImage } from "../types";
 
 export default function Admin() {
   const [authed, setAuthed] = useState(false);
@@ -112,24 +44,23 @@ export default function Admin() {
   }, []);
   const [tab, setTab] = useState<TabKey>("orders");
   const [filter, setFilter] = useState("all");
-  const [orders, setOrders] = useState<any[]>([]);
-  const [items, setItems] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [carouselImages, setCarouselImages] = useState<any[]>([]);
+  const [carouselImages, setCarouselImages] = useState<CarouselImage[]>([]);
   const [carouselEnabled, setCarouselEnabled] = useState(true);
   const [carouselSpeed, setCarouselSpeed] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<any>({});
-  const [isNewItem, setIsNewItem] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [showCatMgr, setShowCatMgr] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const seenOrderIds = useRef<Set<string>>(new Set());
-  const alertInitialised = useRef(false);
+  const [confirmDeleteMenu, setConfirmDeleteMenu] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // ── Sound alert on new orders ──────────────────────────────────────────────
-  _useOrderAlert(orders, seenOrderIds, alertInitialised);
+  useOrderAlert(orders);
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   const INACTIVITY_MS = 30 * 60 * 1000; // 30 minutes
@@ -206,9 +137,9 @@ export default function Admin() {
           .order("created_at", { ascending: true }),
         supabase.from("carousel_settings").select("*").eq("id", 1).single(),
       ]);
-      if (m) setItems(m);
-      if (o) setOrders(o);
-      if (cats) setCategories(cats.map((c: any) => c.name));
+      if (m) setItems(m as MenuItem[]);
+      if (o) setOrders(o as Order[]);
+      if (cats) setCategories(cats.map((c: { name: string }) => c.name));
       if (cImgs) setCarouselImages(cImgs);
       if (cSettings) {
         setCarouselEnabled(cSettings.enabled ?? true);
@@ -283,53 +214,16 @@ export default function Admin() {
   };
 
   // ── Menu actions ───────────────────────────────────────────────────────────
-  const uploadImg = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
-    setUploading(true);
-    const file = e.target.files[0];
-    const path = `menu/${Date.now()}.${file.name.split(".").pop()}`;
-    const { error } = await supabase.storage
-      .from("menu-items")
-      .upload(path, file);
-    if (!error) {
-      const { data } = supabase.storage.from("menu-items").getPublicUrl(path);
-      setEditForm((p: any) => ({ ...p, image: data.publicUrl }));
-      toast.success("Photo updated");
-    }
-    setUploading(false);
-  };
-
-  const saveItem = async () => {
-    if (!editForm.name?.trim()) {
-      toast.error("Item name is required");
-      return;
-    }
-    if (
-      editForm.price === "" ||
-      editForm.price === null ||
-      editForm.price === undefined
-    ) {
-      toast.error("Price is required");
-      return;
-    }
-
-    const sanitized = {
-      name: editForm.name.trim(),
-      description: editForm.description?.trim() ?? "",
-      price: parseFloat(editForm.price) || 0,
-      image: editForm.image ?? "/placeholder.svg",
-      category: editForm.category ?? "",
-    };
-
-    if (isNewItem) {
+  const handleSaveModal = async (savedItem: Partial<MenuItem>, isNew: boolean) => {
+    if (isNew) {
       const { data, error } = await supabase
         .from("menu_items")
-        .insert([sanitized])
+        .insert([savedItem])
         .select();
       if (!error && data) {
-        setItems((p) => p.map((i) => (i.id === editId ? data[0] : i)));
-        setEditId(null);
-        setIsNewItem(false);
+        setItems((p) => [data[0], ...p]);
+        setShowItemModal(false);
+        setEditingItem(null);
         toast.success("Item created");
       } else {
         toast.error(error?.message ?? "Failed to save item");
@@ -337,13 +231,14 @@ export default function Admin() {
     } else {
       const { error } = await supabase
         .from("menu_items")
-        .update(sanitized)
-        .eq("id", editId);
+        .update(savedItem)
+        .eq("id", editingItem.id);
       if (!error) {
         setItems((p) =>
-          p.map((i) => (i.id === editId ? { ...i, ...sanitized } : i)),
+          p.map((i) => (i.id === editingItem.id ? { ...i, ...savedItem } : i)),
         );
-        setEditId(null);
+        setShowItemModal(false);
+        setEditingItem(null);
         toast.success("Saved");
       } else {
         toast.error(error?.message ?? "Failed to update item");
@@ -351,39 +246,32 @@ export default function Admin() {
     }
   };
 
-  const cancelEdit = () => {
-    if (isNewItem) {
-      setItems((p) => p.filter((i) => i.id !== editId));
-      setIsNewItem(false);
-    }
-    setEditId(null);
-    setEditForm({});
-  };
-
   const addItem = () => {
-    const defaultCat = categories[0] ?? "Uncategorized";
-    const tempId = `new-${Date.now()}`;
-    const draft = {
-      id: tempId,
-      name: "",
-      description: "",
-      price: "",
-      image: "/placeholder.svg",
-      category: defaultCat,
-    };
-    setItems((p) => [draft, ...p]);
-    setEditId(tempId);
-    setEditForm(draft);
-    setIsNewItem(true);
+    setEditingItem(null);
+    setShowItemModal(true);
   };
 
-  const deleteItem = async (id: string) => {
-    if (!window.confirm("Remove this item?")) return;
+  const deleteItem = (id: string, name: string) => {
+    // UI-only dummy items defense
+    if (id.startsWith("new-")) {
+      setItems((p) => p.filter((i) => i.id !== id));
+      return;
+    }
+    setConfirmDeleteMenu({ id, name });
+  };
+
+  const executeDeleteItem = async () => {
+    if (!confirmDeleteMenu) return;
+    const { id } = confirmDeleteMenu;
+
     const { error } = await supabase.from("menu_items").delete().eq("id", id);
     if (!error) {
       setItems((p) => p.filter((i) => i.id !== id));
       toast.success("Removed");
+    } else {
+      toast.error(error.message || "Failed to remove item.");
     }
+    setConfirmDeleteMenu(null);
   };
 
   // ── Guard ──────────────────────────────────────────────────────────────────
@@ -434,14 +322,20 @@ export default function Admin() {
       >
         <AdminTopBar pending={pending} onLogout={logout} />
 
-        <main
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            WebkitOverflowScrolling: "touch",
-            paddingBottom: 80,
-          }}
-        >
+        <AnimatePresence mode="wait">
+          <motion.main
+            key={tab}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            style={{
+              flex: 1,
+              overflowY: "auto",
+              WebkitOverflowScrolling: "touch",
+              paddingBottom: 80,
+            }}
+          >
           <div
             className="adm-content"
             style={{ maxWidth: 720, margin: "0 auto", padding: "24px 18px" }}
@@ -520,7 +414,7 @@ export default function Admin() {
             {/* Filter pills — orders tab only */}
             {tab === "orders" && (
               <div
-                className="adm-filter-row"
+                className="adm-filter-row no-scrollbar"
                 style={{
                   display: "flex",
                   gap: 7,
@@ -528,7 +422,7 @@ export default function Admin() {
                   WebkitOverflowScrolling: "touch",
                   marginBottom: 18,
                   paddingBottom: 2,
-                  flexWrap: "wrap",
+                  flexWrap: "nowrap",
                 }}
               >
                 {ORDER_FILTERS.map((fl) => (
@@ -601,39 +495,16 @@ export default function Admin() {
             {/* ── Inventory tab ── */}
             {!loading && tab === "inventory" && (
               <>
-                <input
-                  type="file"
-                  ref={fileRef}
-                  accept="image/*"
-                  onChange={uploadImg}
-                  style={{ display: "none" }}
-                />
-                <div
-                  className="adm-menu-grid"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, 1fr)",
-                    gap: 12,
-                  }}
-                >
+                <div className="grid-responsive">
                   {items.map((item) => (
                     <MenuItemCard
                       key={item.id}
                       item={item}
-                      isEditing={editId === item.id}
-                      editForm={editForm}
-                      setEditForm={setEditForm}
                       onEdit={() => {
-                        setEditId(item.id);
-                        setEditForm(item);
-                        setIsNewItem(false);
+                        setEditingItem(item);
+                        setShowItemModal(true);
                       }}
-                      onCancel={cancelEdit}
-                      onSave={saveItem}
-                      onDelete={() => deleteItem(item.id)}
-                      onImgClick={() => fileRef.current?.click()}
-                      uploading={uploading}
-                      categories={categories}
+                      onDelete={() => deleteItem(item.id, item.name)}
                     />
                   ))}
                 </div>
@@ -650,7 +521,7 @@ export default function Admin() {
                       (o) =>
                         o.status === "pending" ||
                         o.status === "preparing" ||
-                        updated.find((u: any) => u.id === o.id),
+                        updated.find((u) => u.id === o.id),
                     ),
                   )
                 }
@@ -669,7 +540,8 @@ export default function Admin() {
               />
             )}
           </div>
-        </main>
+          </motion.main>
+        </AnimatePresence>
       </div>
 
       {/* Mobile bottom nav */}
@@ -683,6 +555,151 @@ export default function Admin() {
           onCategoriesChange={setCategories}
         />
       )}
+
+      {/* Add/Edit Item Modal */}
+      {showItemModal && (
+        <MenuItemModal
+          item={editingItem}
+          categories={categories}
+          onClose={() => {
+            setShowItemModal(false);
+            setEditingItem(null);
+          }}
+          onSave={handleSaveModal}
+        />
+      )}
+
+      {/* Custom Confirmation Modal — Portal to body for true viewport centering */}
+      <AnimatePresence>
+        {confirmDeleteMenu &&
+          createPortal(
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setConfirmDeleteMenu(null)}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  zIndex: 9998,
+                  background: "rgba(0,0,0,0.6)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                }}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                style={{
+                  position: "fixed",
+                  zIndex: 9999,
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: "calc(100% - 40px)",
+                  maxWidth: 340,
+                  background: "rgba(25, 24, 24, 0.98)",
+                  borderRadius: 24,
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  boxShadow: "0 40px 100px rgba(0,0,0,0.6)",
+                  padding: "36px 24px",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 18,
+                    background: "rgba(239, 68, 68, 0.15)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 20,
+                    color: "#ef4444",
+                  }}
+                >
+                  <Trash2 size={30} />
+                </div>
+
+                <h3
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 700,
+                    color: "#fff",
+                    marginBottom: 8,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  Remove Item?
+                </h3>
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: "rgba(255, 255, 255, 0.6)",
+                    lineHeight: 1.6,
+                    marginBottom: 32,
+                  }}
+                >
+                  Are you sure you want to remove{" "}
+                  <strong style={{ color: "#fff" }}>
+                    "{confirmDeleteMenu.name}"
+                  </strong>?
+                  This item will be permanently deleted.
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    width: "100%",
+                  }}
+                >
+                  <button
+                    onClick={executeDeleteItem}
+                    style={{
+                      width: "100%",
+                      padding: "16px",
+                      borderRadius: 16,
+                      border: "none",
+                      background: "#ef4444",
+                      color: "#fff",
+                      fontSize: 15,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      boxShadow: "0 8px 20px rgba(239, 68, 68, 0.2)",
+                    }}
+                  >
+                    Yes, Remove Item
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteMenu(null)}
+                    style={{
+                      width: "100%",
+                      padding: "16px",
+                      borderRadius: 16,
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      background: "rgba(255, 255, 255, 0.05)",
+                      color: "rgba(255, 255, 255, 0.8)",
+                      fontSize: 14,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            </>,
+            document.body
+          )}
+      </AnimatePresence>
     </div>
   );
 }

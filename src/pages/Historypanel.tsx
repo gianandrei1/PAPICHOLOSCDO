@@ -1,4 +1,6 @@
+import { formatPrice } from "@/lib/utils";
 import { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   Clock,
   CheckCircle2,
@@ -16,6 +18,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { C, HISTORY_FILTERS } from "./constants";
 import { Pill, Lbl, HR } from "./AdminPrimitives";
+import { Order } from "../types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const toDateKey = (dateStr: string) => {
@@ -36,7 +39,7 @@ const fmtDate = (key: string) => {
 };
 
 // ── Order list ────────────────────────────────────────────────────────────────
-const OrderList = ({ orders, filter }: { orders: any[]; filter: string }) => {
+const OrderList = ({ orders, filter }: { orders: Order[]; filter: string }) => {
   const [openId, setOpenId] = useState<string | null>(null);
   const shown =
     filter === "all" ? orders : orders.filter((o) => o.status === filter);
@@ -151,7 +154,7 @@ const OrderList = ({ orders, filter }: { orders: any[]; filter: string }) => {
                     textDecoration: isCancelled ? "line-through" : "none",
                   }}
                 >
-                  ₱{Number(order.total_price).toFixed(0)}
+                  ₱{formatPrice(order.total_price)}
                 </div>
                 <div style={{ color: C.faint }}>
                   {isOpen ? (
@@ -177,7 +180,7 @@ const OrderList = ({ orders, filter }: { orders: any[]; filter: string }) => {
                     }}
                   >
                     <Lbl t="Items ordered" />
-                    {order.order_items?.map((item: any, i: number) => (
+                    {order.order_items?.map((item, i: number) => (
                       <div
                         key={i}
                         style={{
@@ -204,7 +207,7 @@ const OrderList = ({ orders, filter }: { orders: any[]; filter: string }) => {
                         </span>
                         {item.price && (
                           <span style={{ fontSize: 13, color: C.mid }}>
-                            ₱{(item.price * item.quantity).toFixed(0)}
+                            ₱{formatPrice(item.price * item.quantity)}
                           </span>
                         )}
                       </div>
@@ -277,17 +280,24 @@ const OrderList = ({ orders, filter }: { orders: any[]; filter: string }) => {
 };
 
 // ── Summary strip ─────────────────────────────────────────────────────────────
-const SummaryStrip = ({ orders }: { orders: any[] }) => {
+const SummaryStrip = ({ orders }: { orders: Order[] }) => {
   const revenue = orders
     .filter((o) => o.status === "completed")
     .reduce((s, o) => s + Number(o.total_price), 0);
 
   return (
-    <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 10,
+        marginBottom: 16,
+      }}
+    >
       {[
         {
           label: "Revenue",
-          value: `₱${revenue.toLocaleString()}`,
+          value: `₱${formatPrice(revenue)}`,
           color: C.ink,
         },
         {
@@ -344,8 +354,8 @@ export const HistoryPanel = ({
   orders,
   onOrdersChange,
 }: {
-  orders: any[];
-  onOrdersChange: (updated: any[]) => void;
+  orders: Order[];
+  onOrdersChange: (updated: Order[]) => void;
 }) => {
   const [filter, setFilter] = useState("all");
   const [selectedDate, setSelectedDate] = useState<string>(todayKey());
@@ -425,136 +435,136 @@ export const HistoryPanel = ({
 
   return (
     <div>
-      {/* ── Confirm delete modal ── */}
-      {showConfirm && (
-        <>
-          {/* Backdrop */}
-          <div
-            onClick={() => !cleaning && setShowConfirm(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 60,
-              background: "rgba(0,0,0,0.45)",
-              backdropFilter: "blur(4px)",
-            }}
-          />
-          {/* Modal */}
-          <div
-            style={{
-              position: "fixed",
-              zIndex: 70,
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "calc(100% - 36px)",
-              maxWidth: 400,
-              background: C.surface,
-              borderRadius: 20,
-              border: `1.5px solid ${C.border}`,
-              boxShadow: "0 24px 64px rgba(0,0,0,0.18)",
-              padding: "28px 24px",
-            }}
-          >
-            {/* Icon */}
+      {/* ── Confirm delete modal — Portal to body for true centering ── */}
+      {showConfirm &&
+        createPortal(
+          <>
+            <div
+              onClick={() => !cleaning && setShowConfirm(false)}
+              style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 9998,
+                background: "rgba(0,0,0,0.45)",
+                backdropFilter: "blur(4px)",
+              }}
+            />
             <div
               style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                background: "#FEE2E2",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
+                position: "fixed",
+                zIndex: 9999,
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: "calc(100% - 36px)",
+                maxWidth: 400,
+                background: C.surface,
+                borderRadius: 20,
+                border: `1.5px solid ${C.border}`,
+                boxShadow: "0 24px 64px rgba(0,0,0,0.18)",
+                padding: "28px 24px",
               }}
             >
-              <AlertTriangle size={22} strokeWidth={1.5} color="#DC2626" />
-            </div>
-
-            <div
-              style={{
-                fontSize: 17,
-                fontWeight: 600,
-                color: C.ink,
-                marginBottom: 8,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Clear Old History?
-            </div>
-            <div
-              style={{
-                fontSize: 14,
-                color: C.mid,
-                lineHeight: 1.6,
-                marginBottom: 24,
-              }}
-            >
-              This will permanently delete{" "}
-              <span style={{ fontWeight: 600, color: C.ink }}>
-                {oldCount} order{oldCount !== 1 ? "s" : ""}
-              </span>{" "}
-              older than 60 days. This cannot be undone.
-            </div>
-
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={() => setShowConfirm(false)}
-                disabled={cleaning}
+              {/* Icon */}
+              <div
                 style={{
-                  flex: 1,
-                  padding: "12px",
-                  borderRadius: 10,
-                  border: `1.5px solid ${C.border}`,
-                  background: C.surface,
-                  color: C.mid,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={clearOldHistory}
-                disabled={cleaning}
-                style={{
-                  flex: 1,
-                  padding: "12px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#DC2626",
-                  color: "#fff",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  cursor: cleaning ? "not-allowed" : "pointer",
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  background: "#FEE2E2",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 7,
-                  opacity: cleaning ? 0.7 : 1,
+                  marginBottom: 16,
                 }}
               >
-                {cleaning ? (
-                  <>
-                    <Loader2
-                      size={14}
-                      style={{ animation: "spin 1s linear infinite" }}
-                    />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={14} strokeWidth={1.5} />
-                    Yes, Delete
-                  </>
-                )}
-              </button>
+                <AlertTriangle size={22} strokeWidth={1.5} color="#DC2626" />
+              </div>
+
+              <div
+                style={{
+                  fontSize: 17,
+                  fontWeight: 600,
+                  color: C.ink,
+                  marginBottom: 8,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                Clear Old History?
+              </div>
+              <div
+                style={{
+                  fontSize: 14,
+                  color: C.mid,
+                  lineHeight: 1.6,
+                  marginBottom: 24,
+                }}
+              >
+                This will permanently delete{" "}
+                <span style={{ fontWeight: 600, color: C.ink }}>
+                  {oldCount} order{oldCount !== 1 ? "s" : ""}
+                </span>{" "}
+                older than 60 days. This cannot be undone.
+              </div>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  disabled={cleaning}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    borderRadius: 10,
+                    border: `1.5px solid ${C.border}`,
+                    background: C.surface,
+                    color: C.mid,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={clearOldHistory}
+                  disabled={cleaning}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: "#DC2626",
+                    color: "#fff",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: cleaning ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 7,
+                    opacity: cleaning ? 0.7 : 1,
+                  }}
+                >
+                  {cleaning ? (
+                    <>
+                      <Loader2
+                        size={14}
+                        style={{ animation: "spin 1s linear infinite" }}
+                      />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={14} strokeWidth={1.5} />
+                      Yes, Delete
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          </>,
+          document.body
+        )}
 
       {/* ── Top row: mode toggle + clear button ── */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
@@ -694,11 +704,13 @@ export const HistoryPanel = ({
 
       {/* ── Filter pills ── */}
       <div
+        className="no-scrollbar"
         style={{
           display: "flex",
           gap: 7,
           marginBottom: 16,
           overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
           paddingBottom: 2,
         }}
       >

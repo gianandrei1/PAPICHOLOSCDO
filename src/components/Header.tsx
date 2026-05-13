@@ -2,33 +2,32 @@ import { motion } from "framer-motion";
 
 const Header = () => {
   return (
-    <header className="relative bg-primary text-primary-foreground px-6 h-32 flex items-center justify-center text-center overflow-visible">
-      {/* Background image — low opacity, covers full header */}
-      <div
-        className="absolute inset-0 w-full h-full"
-        style={{
-          backgroundImage: "url('/BACKGROUND.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          opacity: 0.075,
-        }}
-      />
-
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
+    <header
+      className="sticky top-0 z-40 w-full h-16 flex items-center justify-center"
+      style={{
+        backgroundColor: "rgba(20, 19, 19, 0.96)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: "1px solid #444748",
+      }}
+    >
+      <motion.h1
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="z-10"
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        style={{
+          fontFamily: "'Montserrat', sans-serif",
+          fontSize: "clamp(22px, 6vw, 32px)",
+          fontWeight: 800,
+          letterSpacing: "-0.04em",
+          color: "#ffffff",
+          textTransform: "uppercase",
+          lineHeight: 1,
+          userSelect: "none",
+        }}
       >
-        <div className="flex justify-center">
-          <img
-            src="/PAPICHOLOS-LOGO.png"
-            alt="Papicholo's CDO"
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-56 sm:h-80 w-auto object-contain"
-          />
-        </div>
-      </motion.div>
+        PAPICHOLOS
+      </motion.h1>
     </header>
   );
 };

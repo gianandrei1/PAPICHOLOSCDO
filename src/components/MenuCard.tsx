@@ -1,3 +1,4 @@
+import { formatPrice } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Plus, Check } from "lucide-react";
 import { useState } from "react";
@@ -6,52 +7,209 @@ import { useCart } from "@/contexts/CartContext";
 
 interface MenuCardProps {
   item: MenuItem;
+  onSelect?: () => void;
 }
 
-const MenuCard = ({ item }: MenuCardProps) => {
+const MenuCard = ({ item, onSelect }: MenuCardProps) => {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   const handleAdd = () => {
     addItem(item);
     setAdded(true);
-    setTimeout(() => setAdded(false), 1200);
+    setTimeout(() => setAdded(false), 1400);
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="overflow-hidden rounded-xl border bg-card shadow-sm"
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      style={{
+        position: "relative",
+        width: "100%",
+        aspectRatio: "3 / 4",
+        overflow: "hidden",
+        border: "1px solid #444748",
+        backgroundColor: "#0e0e0e",
+        borderRadius: 0,
+        cursor: "pointer",
+      }}
+      onClick={onSelect}
     >
-      <div className="aspect-[4/3] overflow-hidden">
+      {/* ── Food Photo ──────────────────────────────────────────────── */}
+      {item.image && (
         <img
           src={item.image}
           alt={item.name}
-          className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+          onLoad={() => setImgLoaded(true)}
           loading="lazy"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            filter: "none",
+            opacity: imgLoaded ? 1 : 0,
+            transition: "opacity 0.4s ease, transform 0.3s ease",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLImageElement).style.transform = "scale(1.03)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLImageElement).style.transform = "scale(1)";
+          }}
         />
-      </div>
-      <div className="p-3">
-        <h3 className="font-semibold text-sm leading-tight text-card-foreground">{item.name}</h3>
-        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{item.description}</p>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-sm font-bold text-card-foreground">₱{item.price}</span>
+      )}
+
+      {/* ── Gradient Overlay ──────────────────────────────────────── */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(to top, #141313 0%, rgba(20,19,19,0.55) 45%, transparent 100%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* ── Bottom Content Area ──────────────────────────────────── */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "12px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          gap: "8px",
+        }}
+      >
+        {/* Left: category chip + name + description */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {item.category && (
+            <span
+              style={{
+                display: "inline-block",
+                marginBottom: "8px",
+                padding: "3px 10px",
+                backgroundColor: "#2a2a2a",
+                border: "1px solid #444748",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "10px",
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "#ffffff",
+                borderRadius: 0,
+              }}
+            >
+              {item.category}
+            </span>
+          )}
+
+          <h3
+            style={{
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: "clamp(13px, 3vw, 17px)",
+              fontWeight: 700,
+              lineHeight: 1.15,
+              letterSpacing: "-0.02em",
+              color: "#ffffff",
+              textTransform: "uppercase",
+              margin: 0,
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical" as const,
+            }}
+          >
+            {item.name}
+          </h3>
+
+          {item.description && (
+            <p
+              style={{
+                marginTop: "4px",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "11px",
+                lineHeight: 1.4,
+                color: "#c4c7c8",
+                overflow: "hidden",
+                display: "-webkit-box",
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: "vertical" as const,
+              }}
+            >
+              {item.description}
+            </p>
+          )}
+        </div>
+
+        {/* Right: price + add button */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: "10px",
+            flexShrink: 0,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: "15px",
+              fontWeight: 700,
+              color: "#ffffff",
+              letterSpacing: "-0.01em",
+              lineHeight: 1,
+            }}
+          >
+            ₱{formatPrice(item.price)}
+          </span>
+
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={handleAdd}
-            className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
-              added
-                ? "bg-green-600 text-white"
-                : "bg-primary text-primary-foreground hover:bg-primary/80"
-            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAdd();
+            }}
+            aria-label={added ? "Added to cart" : `Add ${item.name} to cart`}
+            style={{
+              width: "32px",
+              height: "32px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#ffffff",
+              color: "#141313",
+              border: "none",
+              borderRadius: 0,
+              cursor: "pointer",
+              transition: "opacity 0.15s ease",
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.opacity = "0.85";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+            }}
           >
-            {added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {added ? (
+              <Check strokeWidth={2.5} style={{ width: "16px", height: "16px" }} />
+            ) : (
+              <Plus strokeWidth={2.5} style={{ width: "16px", height: "16px" }} />
+            )}
           </motion.button>
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
 };
 

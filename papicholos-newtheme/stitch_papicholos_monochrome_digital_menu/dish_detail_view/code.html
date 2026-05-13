@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Papicholos - Signature Dish</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface-variant": "#c4c7c8",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "error-container": "#93000a",
+                        "surface-tint": "#c6c6c7",
+                        "primary-fixed": "#e2e2e2",
+                        "secondary": "#c8c6c5",
+                        "tertiary-container": "#e2e2e2",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-container": "#636565",
+                        "on-tertiary": "#2f3131",
+                        "tertiary": "#ffffff",
+                        "inverse-surface": "#e5e2e1",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-secondary-container": "#b7b5b4",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-secondary": "#313030",
+                        "background": "#141313",
+                        "surface-container": "#201f1f",
+                        "on-primary-container": "#636565",
+                        "secondary-container": "#474746",
+                        "inverse-primary": "#5d5f5f",
+                        "on-primary-fixed-variant": "#454747",
+                        "primary": "#ffffff",
+                        "outline": "#8e9192",
+                        "primary-container": "#e2e2e2",
+                        "surface": "#141313",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "error": "#ffb4ab",
+                        "outline-variant": "#444748",
+                        "surface-container-highest": "#353434",
+                        "secondary-fixed": "#e5e2e1",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface-variant": "#353434",
+                        "surface-container-low": "#1c1b1b",
+                        "on-primary-fixed": "#1a1c1c",
+                        "on-error": "#690005",
+                        "on-surface": "#e5e2e1",
+                        "on-background": "#e5e2e1",
+                        "surface-container-lowest": "#0e0e0e",
+                        "inverse-on-surface": "#313030",
+                        "surface-bright": "#3a3939",
+                        "on-primary": "#2f3131",
+                        "surface-dim": "#141313"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "48px",
+                        "margin-mobile": "20px",
+                        "gutter-bento": "12px",
+                        "stack-md": "24px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Montserrat"],
+                        "label-caps": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-xl": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["20px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "display-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "letterSpacing": "0.01em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col relative pb-32">
+<!-- Back Button / Top Bar (Suppressed Main Nav, Task-Focused) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16 bg-background/50 backdrop-blur-md">
+<button class="text-primary hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<button class="text-primary hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 0;">favorite</span>
+</button>
+</header>
+<!-- Hero Image -->
+<section class="w-full h-[618px] relative">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A striking, high-contrast black and white photograph of a gourmet burger dripping with melted cheese and dark sauce. The image is cropped tightly, emphasizing texture and intense lighting against a pure black void background. The aesthetic is ultra-premium, moody, and editorial, perfectly matching a high-end dark mode culinary lookbook." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCTBvBx0GbQsZXLdjINg_2L1sXzf1TVGKQv_xG7szrDlTVUsq0gUryzO21aYLJsdf3_nYtuzQBk6lOWiwFSGha9auC5qoSU88OAMLpC0br9ofBxXkbbpJwhOysDnL8SVDGs-gf-N-5zYXzl3_3lIs7SIwLGF6rCc40vuk39n5bK2wl_e9eGZhZU8Un7iIG8khB42IyoihGJBI_6fKui3ecgYYCbYshLFrkjZokeC4yyQzVOM6A6Q_OrX9FtHGk0K2oZ6gHJ8M6meLma');"></div>
+<!-- Gradient Overlay for legibility -->
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"></div>
+<!-- Status Chips -->
+<div class="absolute bottom-stack-md left-margin-mobile flex gap-2">
+<span class="bg-surface-container-high text-primary font-label-caps text-label-caps px-3 py-1 rounded-sm uppercase tracking-widest border border-outline-variant">Signature</span>
+<span class="bg-surface-container-high text-primary font-label-caps text-label-caps px-3 py-1 rounded-sm uppercase tracking-widest border border-outline-variant">Spicy</span>
+</div>
+</section>
+<!-- Content Area -->
+<main class="px-margin-mobile pt-stack-md flex-grow z-10 relative">
+<!-- Title & Price -->
+<div class="flex justify-between items-start mb-stack-md">
+<h1 class="font-display-xl text-display-xl text-primary uppercase max-w-[70%]">El Diablo<br/>Smash</h1>
+<span class="font-headline-lg text-headline-lg text-primary">24.0</span>
+</div>
+<!-- Description -->
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-stack-lg max-w-2xl">
+            A masterclass in heat and umami. Double dry-aged beef patties smashed to a crisp edge, layered with ghost pepper jack, blackened jalapeños, and our house-made charcoal aioli on a toasted brioche bun.
+        </p>
+<!-- Ingredients/Details Grid -->
+<div class="mb-stack-lg">
+<h2 class="font-label-caps text-label-caps text-primary uppercase mb-stack-md tracking-[0.15em] border-b border-outline-variant pb-2">The Architecture</h2>
+<ul class="space-y-4">
+<li class="flex items-center gap-4 border-b border-surface-container-high pb-4">
+<span class="material-symbols-outlined text-outline">check</span>
+<span class="font-body-sm text-body-sm text-on-surface">Double Dry-Aged Beef</span>
+</li>
+<li class="flex items-center gap-4 border-b border-surface-container-high pb-4">
+<span class="material-symbols-outlined text-outline">check</span>
+<span class="font-body-sm text-body-sm text-on-surface">Ghost Pepper Jack Cheese</span>
+</li>
+<li class="flex items-center gap-4 border-b border-surface-container-high pb-4">
+<span class="material-symbols-outlined text-outline">check</span>
+<span class="font-body-sm text-body-sm text-on-surface">Blackened Jalapeños</span>
+</li>
+<li class="flex items-center gap-4 border-b border-surface-container-high pb-4">
+<span class="material-symbols-outlined text-outline">check</span>
+<span class="font-body-sm text-body-sm text-on-surface">Charcoal Aioli</span>
+</li>
+</ul>
+</div>
+</main>
+<!-- Floating Action Bar (Cart) -->
+<div class="fixed bottom-0 left-0 w-full p-margin-mobile bg-background/95 backdrop-blur-md border-t border-outline-variant z-50">
+<div class="flex items-center justify-between gap-4 max-w-2xl mx-auto">
+<!-- Quantity Toggle -->
+<div class="flex items-center gap-4 border border-outline-variant px-4 py-3 rounded-sm">
+<button class="text-primary hover:opacity-70"><span class="material-symbols-outlined text-[20px]">remove</span></button>
+<span class="font-headline-md text-headline-md text-primary w-6 text-center">1</span>
+<button class="text-primary hover:opacity-70"><span class="material-symbols-outlined text-[20px]">add</span></button>
+</div>
+<!-- Add to Cart Button -->
+<button class="flex-grow bg-primary text-background font-label-caps text-label-caps py-4 rounded-sm uppercase tracking-widest hover:opacity-90 transition-opacity flex justify-center items-center gap-2">
+<span>Add to Order</span>
+<span class="font-headline-md text-[16px]">• 24.0</span>
+</button>
+</div>
+</div>
+</body></html>

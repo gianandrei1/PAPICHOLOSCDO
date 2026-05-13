@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Papicholos Menu</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface-variant": "#c4c7c8",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "error-container": "#93000a",
+                        "surface-tint": "#c6c6c7",
+                        "primary-fixed": "#e2e2e2",
+                        "secondary": "#c8c6c5",
+                        "tertiary-container": "#e2e2e2",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-container": "#636565",
+                        "on-tertiary": "#2f3131",
+                        "tertiary": "#ffffff",
+                        "inverse-surface": "#e5e2e1",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "tertiary-fixed": "#e2e2e2",
+                        "on-secondary-container": "#b7b5b4",
+                        "on-secondary-fixed-variant": "#474746",
+                        "on-secondary": "#313030",
+                        "background": "#141313",
+                        "surface-container": "#201f1f",
+                        "on-primary-container": "#636565",
+                        "secondary-container": "#474746",
+                        "inverse-primary": "#5d5f5f",
+                        "on-primary-fixed-variant": "#454747",
+                        "primary": "#ffffff",
+                        "outline": "#8e9192",
+                        "primary-container": "#e2e2e2",
+                        "surface": "#141313",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "error": "#ffb4ab",
+                        "outline-variant": "#444748",
+                        "surface-container-highest": "#353434",
+                        "secondary-fixed": "#e5e2e1",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface-variant": "#353434",
+                        "surface-container-low": "#1c1b1b",
+                        "on-primary-fixed": "#1a1c1c",
+                        "on-error": "#690005",
+                        "on-surface": "#e5e2e1",
+                        "on-background": "#e5e2e1",
+                        "surface-container-lowest": "#0e0e0e",
+                        "inverse-on-surface": "#313030",
+                        "surface-bright": "#3a3939",
+                        "on-primary": "#2f3131",
+                        "surface-dim": "#141313"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "48px",
+                        "margin-mobile": "20px",
+                        "gutter-bento": "12px",
+                        "stack-md": "24px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Montserrat"],
+                        "label-caps": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-xl": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["20px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "display-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "letterSpacing": "0.01em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background pb-32 antialiased selection:bg-primary selection:text-background">
+<!-- TopAppBar -->
+<header class="bg-background flex items-center w-full px-margin-mobile h-16 sticky top-0 z-40 bg-opacity-95 backdrop-blur-md justify-center">
+<h1 class="font-display-xl text-display-xl font-extrabold tracking-tighter text-primary uppercase">PAPICHOLOS</h1>
+</header>
+<main class="w-full max-w-md mx-auto md:max-w-2xl lg:max-w-4xl">
+<!-- Bento Grid Categories -->
+<section class="grid grid-cols-2 gap-gutter-bento px-margin-mobile py-stack-md">
+<a class="group relative aspect-square bg-surface-container-lowest border border-outline-variant flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity" href="#">
+<div class="absolute inset-0 bg-surface-container-lowest z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
+<img alt="Drinks" class="absolute inset-0 w-full h-full object-cover grayscale mix-blend-overlay" data-alt="A striking, high-contrast black and white close-up photograph of a sophisticated cocktail glass casting sharp geometric shadows on a dark surface. The lighting is dramatic and moody, emphasizing the condensation on the glass and the sleek silhouette of the drink. The overall aesthetic perfectly aligns with a high-fashion, minimalist lookbook style, utilizing deep blacks and crisp highlights to create a premium, editorial feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCFiD-NLAEhRX_55Vfej-pNPbg_bDnQxVM6lk5sJu_VZItxnlaWqPt6iBo2l2jFv7sbpO0dpV4kzqHmXBKlsu6faygJ3vbk-YxxxSfcglMnSgDsxxHqoaDxRX-S2SVnq8tdAmj3Vgo34lXdTmjNI5-TRFERzQtgIa9YplLWCOz-nq-TRjCztyOjDY-QLO-vvJEQqcX0Ok3yUpgyy4o6AX5S4DOhHXBQhR4HvtdvVXcywCbGVGmI_irSGP8xtEuA55VRpdDjD695FR2"/>
+<span class="relative z-20 font-label-caps text-label-caps text-primary uppercase tracking-widest">Drinks</span>
+</a>
+<a class="group relative aspect-square bg-surface-container-lowest border border-outline-variant flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity" href="#">
+<div class="absolute inset-0 bg-surface-container-lowest z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
+<img alt="Starters" class="absolute inset-0 w-full h-full object-cover grayscale mix-blend-overlay" data-alt="An elegant, monochromatic top-down view of artfully plated appetizers on a textured slate slab. The composition is highly structured and asymmetric, focusing on the geometric shapes of the food items against the vast, empty negative space of the background. Lighting is stark and directional, producing a stark black and white aesthetic that evokes a contemporary art gallery presentation of gastronomy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuADar6ZDLqa9OHRcrpwo3WBkLO903rf6RR-Sed0dYbzjuEQTH5Ija2MLeDN5bbv2GBc-idJK7rOM6ENkTxu5lRwb0n0Jt1dZzSgYfoFu-imdQvIc2dxZ8Mnd29zRg6gzf4h8cFDygIM6XUJDroxWPWL-6op1Qj3URg96seFJaTKdx0AS7x5qCB6b7fKNtrCGIgnRWOK9pcO0SaxBSZE_ow074fUwgMRmT992xV_5WOcy-6DfcMiMPRWtplncw-SVM6S0A411nmwVKzt"/>
+<span class="relative z-20 font-label-caps text-label-caps text-primary uppercase tracking-widest">Starters</span>
+</a>
+<a class="group relative aspect-square bg-surface-container-lowest border border-outline-variant flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity" href="#">
+<div class="absolute inset-0 bg-surface-container-lowest z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
+<img alt="Mains" class="absolute inset-0 w-full h-full object-cover grayscale mix-blend-overlay" data-alt="A bold, editorial black and white photograph of a premium cut of steak, captured with a shallow depth of field. The texture of the charred exterior is highlighted by stark, high-key lighting against a completely black background. The image is devoid of color, relying purely on tonal contrast and structural integrity to convey a sense of raw, sophisticated culinary power." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-EYAYmytAQEtpEMoyjpHIH9Im0Dew_CTXncETdtitY2sazoDxEatAWvq4tXm9_OsVACU8VQ9AZYgTZeIEQLIMkeBuRgg-ZVOmcLplflg0v8HzNLIgX28uJe6bkJe6PbvHHW1mc_xz-JjQmPFm-hr7WtPGA12A0WJaSSaHcoc1YGT3EpJBoHcfl4RMYQWiD4o6J4xHPOr0iIZM5y_qBwAmdYeliz2-zURrSlRRyTvkNCbmEiieahlur68v7E3kngUxwcyN-4DzW_ef"/>
+<span class="relative z-20 font-label-caps text-label-caps text-primary uppercase tracking-widest">Mains</span>
+</a>
+<a class="group relative aspect-square bg-surface-container-lowest border border-outline-variant flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity" href="#">
+<div class="absolute inset-0 bg-surface-container-lowest z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
+<img alt="Desserts" class="absolute inset-0 w-full h-full object-cover grayscale mix-blend-overlay" data-alt="A minimalist, high-contrast monochrome image of a structured, architectural dessert resting on a pristine dark plate. The scene is illuminated by a single, sharp light source that creates deep, graphic shadows. The overall mood is intense and refined, fitting perfectly within a brutalist, high-end digital menu design where food is treated as sculptural art." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYDEcvRXKN6VlgCvSrgpWdALehYp7MPeOOd_C_mjiLbWirYi82AlACKUsKzKjq6vo0PHDKJoHgRbRHLL8n4IyRz_uqHjNvIf960ANIK4y50_rWio-MHrqZNzLEU9iClVqP6Z2JlAk7G3u7W47Z3YdMXMNw231rCAorJmQLrJCDoqYJa2s81Io_iSpT-ISn4rPgHW-SrBTOnuYYyMI8Fb57gz-4IHEP47Sek45PV_Z_fBC04ePpkTzJD-S0Y5M1M4l6UvwqgWI7cYcr"/>
+<span class="relative z-20 font-label-caps text-label-caps text-primary uppercase tracking-widest">Desserts</span>
+</a>
+</section>
+<!-- Recommended Horizontal Scroll -->
+<section class="pt-stack-md pb-stack-lg">
+<h2 class="font-headline-md text-headline-md px-margin-mobile mb-4 text-primary">RECOMMENDED</h2>
+<div class="flex overflow-x-auto snap-x snap-mandatory gap-margin-mobile px-margin-mobile pb-4 no-scrollbar">
+<article class="snap-center shrink-0 w-4/5 md:w-2/5 aspect-[4/5] relative bg-surface-container-lowest border border-outline-variant overflow-hidden">
+<img alt="Truffle Pasta" class="absolute inset-0 w-full h-full object-cover grayscale" data-alt="A close-up, highly detailed black and white editorial shot of handmade pasta twirled elegantly on a dark ceramic dish. The stark contrast between the bright highlights on the pasta ribbons and the deep blacks of the background creates a compelling visual tension. The image is styled like a moody, high-fashion campaign, emphasizing texture and form over color." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH4JA9hlmwuC6qTy96_E2h2-czX_Z-Yyy7p2smO6UvVfEqSaS7fFpOXw2v_G-az_d7PHpAhd9uxmeqokPft4mIqVitDVjlrrz_jHdkdKPvraZe7M7YeKYJ3r7sremGkPm94uN8WgogM0OsAE3Qx0kFplGZnz9GpOKDkpdw3YFgNhh_70-D8ZY80_HECT8e3sIuFS7V3s05QJcRqfB0EuumnLnItb4sTGcbkTHyHO697y7mYcCrAAQrEnpCpaXp2j52lSs3JsEA8y2T"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
+<div class="absolute bottom-0 left-0 w-full p-4">
+<span class="inline-block px-2 py-1 mb-2 bg-surface-container-lowest border border-outline-variant font-label-caps text-label-caps text-primary uppercase tracking-widest">Signature</span>
+<h3 class="font-body-lg text-body-lg text-primary">Black Truffle Linguine</h3>
+<p class="font-headline-md text-headline-md text-primary mt-1">32.0</p>
+</div>
+</article>
+<article class="snap-center shrink-0 w-4/5 md:w-2/5 aspect-[4/5] relative bg-surface-container-lowest border border-outline-variant overflow-hidden">
+<img alt="Wagyu Burger" class="absolute inset-0 w-full h-full object-cover grayscale" data-alt="An imposing, strictly monochromatic photograph of a tall, structured gourmet burger. The lighting is harsh and dramatic, casting sharp shadows that emphasize the towering architectural quality of the ingredients. The background is a void of pure black, allowing the stark white highlights on the bun and textures to stand out in a brutalist, high-end culinary showcase." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYeTlx6ezVsuMGEPCdD1kylZW1tll2qkWxOBPrkYb1QCEUdKirddZhWnV8ekRkvTqc6Dn9mfZ-tS4W4CNYwFReU6DoMLw8ruCbYmnkz1R_tIrfbHcMLiPuDneJU3PnxBKqqOHlFcQL8tD-uJ06FyooxsEkxTrEstv5gILUhHDw3DaqZ1Osby5fRKre2SIDoV7QKnM5XAm3kJ_ErlvVOv-DSM75KwiC_zR4dchA9T2DGiZ9u0ki2aOEwMVhJNE6NBjnprTi229-omq5"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
+<div class="absolute bottom-0 left-0 w-full p-4">
+<span class="inline-block px-2 py-1 mb-2 bg-surface-container-lowest border border-outline-variant font-label-caps text-label-caps text-primary uppercase tracking-widest">New</span>
+<h3 class="font-body-lg text-body-lg text-primary">Wagyu Architecture</h3>
+<p class="font-headline-md text-headline-md text-primary mt-1">28.5</p>
+</div>
+</article>
+</div>
+</section>
+<!-- Main Feed Vertical Cards -->
+<section class="flex flex-col gap-stack-lg px-margin-mobile pb-stack-lg">
+<article class="w-full aspect-[3/4] relative bg-surface-container-lowest border border-outline-variant overflow-hidden">
+<img alt="Tomahawk Steak" class="absolute inset-0 w-full h-full object-cover grayscale" data-alt="A dramatic, full-bleed vertical black and white photograph of a massive bone-in Tomahawk steak. The image resembles a high-fashion lookbook spread, utilizing immense negative space at the top and stark, aggressive lighting to highlight the texture of the meat. The strictly monochromatic palette reinforces a sense of raw, uncompromising quality and elite culinary design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRVTgC1Q73FjuOWmNRdeMO9O6tYBob2sVxvCD3fui1bScQctXSWPcUXjSwmMLG-RCIGKD5A6vTyvCKox7AZpVcO0eRu_4gID_QvVVmNxKquRpdDBrcClbTLQAhbDWYzBi1wXHm4RqSWo-Ef1_tJ7De6sHH5hP0Yel-b2M600baILZt2t5PoyBvGl8jkY4t7kqQ77d_1vFd-AS9HED6ywfzXNX_QcKDtDW_mU4Ni1RXyWYyFrz190I-oSwmNVrHjzrEcgltyhH3dWsz"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 w-full p-margin-mobile flex justify-between items-end">
+<div>
+<h3 class="font-headline-lg text-headline-lg text-primary uppercase tracking-tight">The Tomahawk</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 max-w-[80%]">Dry-aged for 45 days. Served bone-in with charred aromatics.</p>
+</div>
+<p class="font-headline-md text-headline-md text-primary">125.0</p>
+</div>
+</article>
+<article class="w-full aspect-[3/4] relative bg-surface-container-lowest border border-outline-variant overflow-hidden">
+<img alt="Oysters" class="absolute inset-0 w-full h-full object-cover grayscale" data-alt="A pristine, high-contrast monochrome image of freshly shucked oysters arranged geometrically on crushed ice. The scene is shot from directly above, turning the culinary subject into a minimalist pattern of interlocking shapes. The deep black tones of the shells contrast sharply with the brilliant white highlights of the ice, creating a visually arresting, editorial aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnQSAbT8VK9ygOfPzOpQB9g42aXg9c8gWKa02yeCs7ZTAWytVeNeS964pNUur4xzuf-i-1BMfFyAnIBx_it5a5A-1K5rPj7vG5Dh07vhpplO568FZb3r-o7Mc373FpUmeQ7hAE6ZdAKjyuX07GD7ODxG9ZpeMgOZXGmVSo86pQyHQDTxTbULCIKp3V0Pd_Lsi2nF2BWvOHFwUcF16dxEjfmLkJ6P5WTpAMLGQdFMOUHowv0x0qfbjKULZuW1nn_PsU3jnN29IvLQIm"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 w-full p-margin-mobile flex justify-between items-end">
+<div>
+<h3 class="font-headline-lg text-headline-lg text-primary uppercase tracking-tight">Pearl Oysters</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 max-w-[80%]">Half dozen. Mignonette, fresh lemon, strict geometry.</p>
+</div>
+<p class="font-headline-md text-headline-md text-primary">36.0</p>
+</div>
+</article>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 bg-background/95 backdrop-blur-md pb-safe">
+<button aria-label="Menu" class="flex flex-col items-center justify-center text-primary font-bold hover:bg-surface-container-highest transition-colors active:scale-90 transition-transform w-full h-full">
+<span class="material-symbols-outlined mb-1" data-icon="menu_book" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="font-label-caps text-label-caps">Menu</span>
+</button>
+<button aria-label="Search" class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-colors active:scale-90 transition-transform w-full h-full">
+<span class="material-symbols-outlined mb-1" data-icon="search">search</span>
+<span class="font-label-caps text-label-caps">Search</span>
+</button>
+<button aria-label="Cart" class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-colors active:scale-90 transition-transform w-full h-full">
+<span class="material-symbols-outlined mb-1" data-icon="shopping_bag">shopping_bag</span>
+<span class="font-label-caps text-label-caps">Cart</span>
+</button>
+</nav>
+</body></html>

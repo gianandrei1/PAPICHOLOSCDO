@@ -1,0 +1,82 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+
+export type OrderStatus = "pending" | "preparing" | "ready_for_pickup" | "completed" | "cancelled";
+
+export interface LiveOrder {
+  id: string;
+  status: OrderStatus;
+  customer_name: string;
+  table_number: string;
+  created_at: string;
+  order_items: { name: string; quantity: number; price: number }[];
+}
+
+const FIXED_WAIT_MINUTES = 5;
+
+export function useOrderStatus(orderId: string | null) {
+  const [order, setOrder] = useState<LiveOrder | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // ── Initial fetch ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!orderId) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchOrder = async () => {
+      setLoading(true);
+
+      const { data, error } = await supabase
+        .from("orders")
+        .select("id, status, customer_name, table_number, created_at, order_items")
+        .eq("id", orderId)
+        .single();
+
+      if (!cancelled) {
+        if (!error && data) {
+          setOrder(data as LiveOrder);
+        }
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+    return () => { cancelled = true; };
+  }, [orderId]);
+
+  // ── Real-time subscription ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!orderId) return;
+
+    const channel = supabase
+      .channel(`order-tracker-${orderId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+          filter: `id=eq.${orderId}`,
+        },
+        (payload) => {
+          setOrder((prev) =>
+            prev ? { ...prev, ...(payload.new as Partial<LiveOrder>) } : prev
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orderId]);
+
+  // Fixed 5-minute wait when pending
+  const estimatedMinutes = order?.status === "pending" ? FIXED_WAIT_MINUTES : 0;
+
+  return { order, loading, estimatedMinutes };
+}

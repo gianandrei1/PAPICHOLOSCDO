@@ -1,4 +1,5 @@
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
+import { Minus, Plus, Trash2, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import {
   Drawer,
@@ -20,63 +21,304 @@ const CartDrawer = ({ open, onClose, onCheckout }: CartDrawerProps) => {
 
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent className="max-h-[85vh]">
-        <DrawerHeader>
-          <DrawerTitle>Your Order</DrawerTitle>
+      <DrawerContent
+        style={{
+          backgroundColor: "#141313",
+          border: "1px solid #444748",
+          borderBottom: "none",
+          borderRadius: 0,
+          maxHeight: "88vh",
+        }}
+      >
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <DrawerHeader
+          style={{
+            borderBottom: "1px solid #444748",
+            padding: "20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <DrawerTitle
+            style={{
+              fontFamily: "'Montserrat', sans-serif",
+              fontSize: "13px",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "#ffffff",
+            }}
+          >
+            Your Order
+          </DrawerTitle>
+          <button
+            onClick={onClose}
+            aria-label="Close cart"
+            style={{
+              background: "none",
+              border: "none",
+              color: "#8e9192",
+              cursor: "pointer",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <X style={{ width: "18px", height: "18px" }} />
+          </button>
         </DrawerHeader>
 
-        <div className="flex-1 overflow-y-auto px-4">
+        {/* ── Item List ──────────────────────────────────────────── */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 20px" }}>
           {items.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Your cart is empty</p>
+            <p
+              style={{
+                padding: "48px 0",
+                textAlign: "center",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "13px",
+                letterSpacing: "0.05em",
+                color: "#8e9192",
+              }}
+            >
+              Your cart is empty
+            </p>
           ) : (
-            <div className="space-y-3">
+            <div style={{ display: "flex", flexDirection: "column" }}>
               {items.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 rounded-lg border p-3">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-14 w-14 rounded-lg object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.name}</p>
-                    <p className="text-sm font-bold text-muted-foreground">
-                      ₱{(item.price * item.quantity).toFixed(2)}
+                <div
+                  key={item.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "16px",
+                    padding: "16px 0",
+                    borderBottom: "1px solid #444748",
+                  }}
+                >
+                  {/* Thumbnail */}
+                  <div
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      flexShrink: 0,
+                      overflow: "hidden",
+                      border: "1px solid #444748",
+                      borderRadius: 0,
+                      backgroundColor: "#0e0e0e",
+                    }}
+                  >
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Name + price */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p
+                      style={{
+                        fontFamily: "'Montserrat', sans-serif",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        letterSpacing: "-0.01em",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {item.name}
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: "'Montserrat', sans-serif",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "#e5e2e1",
+                        marginTop: "4px",
+                      }}
+                    >
+                      ₱{formatPrice(item.price * item.quantity)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5">
+
+                  {/* Quantity controls */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      border: "1px solid #444748",
+                      borderRadius: 0,
+                    }}
+                  >
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
+                      aria-label="Decrease quantity"
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "none",
+                        border: "none",
+                        borderRight: "1px solid #444748",
+                        color: "#ffffff",
+                        cursor: "pointer",
+                        transition: "background 0.15s ease",
+                        borderRadius: 0,
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#2a2a2a";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                      }}
                     >
-                      <Minus className="h-3 w-3" />
+                      <Minus style={{ width: "12px", height: "12px" }} />
                     </button>
-                    <span className="w-5 text-center text-sm font-medium">{item.quantity}</span>
+                    <span
+                      style={{
+                        width: "32px",
+                        textAlign: "center",
+                        fontFamily: "'Montserrat', sans-serif",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color: "#ffffff",
+                      }}
+                    >
+                      {item.quantity}
+                    </span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                      aria-label="Increase quantity"
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "none",
+                        border: "none",
+                        borderLeft: "1px solid #444748",
+                        color: "#ffffff",
+                        cursor: "pointer",
+                        transition: "background 0.15s ease",
+                        borderRadius: 0,
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#2a2a2a";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                      }}
                     >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="ml-1 flex h-7 w-7 items-center justify-center rounded-full text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Plus style={{ width: "12px", height: "12px" }} />
                     </button>
                   </div>
+
+                  {/* Remove */}
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    aria-label="Remove item"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#8e9192",
+                      cursor: "pointer",
+                      padding: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      flexShrink: 0,
+                      transition: "color 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.color = "#ffb4ab";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.color = "#8e9192";
+                    }}
+                  >
+                    <Trash2 style={{ width: "14px", height: "14px" }} />
+                  </button>
                 </div>
               ))}
             </div>
           )}
         </div>
 
+        {/* ── Footer ─────────────────────────────────────────────── */}
         {items.length > 0 && (
-          <DrawerFooter>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-muted-foreground">Total</span>
-              <span className="text-lg font-bold">₱{totalPrice.toFixed(2)}</span>
+          <DrawerFooter
+            style={{
+              padding: "20px",
+              borderTop: "1px solid #444748",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: "#8e9192",
+                }}
+              >
+                Total
+              </span>
+              <span
+                style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  fontSize: "22px",
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                ₱{formatPrice(totalPrice)}
+              </span>
             </div>
-            <Button onClick={onCheckout} size="lg" className="w-full rounded-xl text-sm">
+            <Button
+              onClick={onCheckout}
+              style={{
+                width: "100%",
+                backgroundColor: "#ffffff",
+                color: "#141313",
+                border: "none",
+                borderRadius: 0,
+                padding: "18px 20px",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                transition: "opacity 0.15s ease",
+                height: "auto",
+              }}
+            >
               Proceed to Checkout
             </Button>
           </DrawerFooter>
